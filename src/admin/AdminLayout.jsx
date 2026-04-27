@@ -66,10 +66,10 @@ export default function AdminLayout() {
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex flex-col admin-sidebar">
         <div className="mb-8">
-          <Link to="/" className="text-xl font-bold text-white">
-            GQ<span className="text-primary-400">-Store</span>
+          <Link to="/" className="flex items-center gap-2">
+            <img src="/assets/logo.png" alt="GQ Store" className="h-12 w-auto brightness-0 invert" />
           </Link>
-          <p className="text-xs text-gray-500 mt-1">Administration</p>
+          <p className="text-xs text-gray-500 mt-2">Administration</p>
         </div>
 
         <nav className="flex-1 space-y-1">
@@ -96,8 +96,8 @@ export default function AdminLayout() {
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-footer text-white z-50 px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="text-lg font-bold">
-          GQ<span className="text-primary-400">-Store</span>
+        <Link to="/">
+          <img src="/assets/logo.png" alt="GQ Store" className="h-10 w-auto brightness-0 invert" />
         </Link>
         <button onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X size={24} /> : <Menu size={24} />}

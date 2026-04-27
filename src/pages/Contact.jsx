@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { Send, Phone, MapPin, MessageCircle } from 'lucide-react'
+import { Send, Phone, MapPin } from 'lucide-react'
+import { FaWhatsapp } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 
 export default function Contact() {
@@ -145,7 +146,7 @@ export default function Contact() {
               >
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 bg-accent-green/10 rounded-xl flex items-center justify-center group-hover:bg-accent-green/20 transition-colors">
-                    <MessageCircle size={28} className="text-accent-green" />
+                    <FaWhatsapp size={28} className="text-[#25D366]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-text-primary mb-1">WhatsApp</h3>

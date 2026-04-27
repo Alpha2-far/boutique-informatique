@@ -34,7 +34,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between py-4 gap-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <img src="/assets/logo.png" alt="GQ Store" className="h-10 w-auto" />
+            <img src="/assets/logo.png" alt="GQ Store" className="h-12 w-auto" />
           </Link>
 
           {/* Search Bar - Desktop */}

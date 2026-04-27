@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ShoppingCart, Phone, Mail, MapPin, Clock } from 'lucide-react'
+import { ShoppingCart, Phone, MapPin, Clock } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -55,12 +55,8 @@ export default function Footer() {
                 <span className="text-sm text-gray-400">+229 98 47 13 66</span>
               </li>
               <li className="flex items-start gap-2.5">
-                <Mail size={14} className="mt-0.5 shrink-0 text-primary-400" />
-                <span className="text-sm text-gray-400">contact@gq-store.com</span>
-              </li>
-              <li className="flex items-start gap-2.5">
                 <MapPin size={14} className="mt-0.5 shrink-0 text-primary-400" />
-                <span className="text-sm text-gray-400">Cotonou, Bénin</span>
+                <span className="text-sm text-gray-400">Calavi Bidossessi</span>
               </li>
             </ul>
           </div>
