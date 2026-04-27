@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import {
   ChevronRight,
   ShoppingCart,
-  MessageCircle,
   Package,
   Star,
   Check,
@@ -305,7 +304,7 @@ export default function ProductDetail() {
                   rel="noopener noreferrer"
                   className="btn-whatsapp flex-1 py-3.5"
                 >
-                  <MessageCircle size={18} />
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" className="w-5 h-5" />
                   Commander via WhatsApp
                 </a>
               </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MessageCircle, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function WhatsAppWidget() {
@@ -44,7 +44,7 @@ export default function WhatsAppWidget() {
         transition={{ duration: 2, repeat: Infinity, repeatType: 'loop' }}
         aria-label="Contacter via WhatsApp"
       >
-        <MessageCircle size={26} className="text-white" fill="white" />
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" className="w-8 h-8" />
       </motion.a>
     </div>
   )
