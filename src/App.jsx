@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Link } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import WhatsAppWidget from './components/WhatsAppWidget'
@@ -31,19 +31,21 @@ function AdminDashboard() {
     <div>
       <h1 className="text-2xl font-bold text-text-primary mb-2">Dashboard</h1>
       <p className="text-text-muted">Bienvenue dans l'espace d'administration GQ-Store.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-        <div className="bg-white rounded-xl border border-border p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+        <Link
+          to="/admin/produits"
+          className="bg-white rounded-xl border border-border p-6 hover:shadow-lg hover:border-primary-700 transition-all duration-200 group"
+        >
           <p className="text-sm text-text-muted">Navigation rapide</p>
-          <p className="text-lg font-bold text-text-primary mt-1">Produits →</p>
-        </div>
-        <div className="bg-white rounded-xl border border-border p-6">
+          <p className="text-lg font-bold text-text-primary mt-1 group-hover:text-primary-700">Produits →</p>
+        </Link>
+        <Link
+          to="/admin/categories"
+          className="bg-white rounded-xl border border-border p-6 hover:shadow-lg hover:border-primary-700 transition-all duration-200 group"
+        >
           <p className="text-sm text-text-muted">Navigation rapide</p>
-          <p className="text-lg font-bold text-text-primary mt-1">Catégories →</p>
-        </div>
-        <div className="bg-white rounded-xl border border-border p-6">
-          <p className="text-sm text-text-muted">Aide</p>
-          <p className="text-lg font-bold text-text-primary mt-1">Documentation</p>
-        </div>
+          <p className="text-lg font-bold text-text-primary mt-1 group-hover:text-primary-700">Catégories →</p>
+        </Link>
       </div>
     </div>
   )
