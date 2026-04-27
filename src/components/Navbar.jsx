@@ -34,12 +34,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between py-4 gap-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 bg-primary-700 rounded-lg flex items-center justify-center">
-              <ShoppingCart size={18} className="text-white" />
-            </div>
-            <span className="text-xl font-bold text-text-primary">
-              GCO<span className="text-primary-700">-Store</span>
-            </span>
+            <img src="/assets/logo.png" alt="GQ Store" className="h-10 w-auto" />
           </Link>
 
           {/* Search Bar - Desktop */}

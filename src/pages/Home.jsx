@@ -77,16 +77,16 @@ export default function Home() {
     return sortedProducts.slice(start, start + ITEMS_PER_PAGE)
   }, [sortedProducts, currentPage])
 
-  const siteDescription = "GCO-Store - Votre destination pour le matériel informatique et high-tech de qualité. Découvrez nos ordinateurs, smartphones, accessoires et plus encore aux meilleurs prix."
+  const siteDescription = "GQ Store - Votre destination pour le matériel informatique et high-tech de qualité. Découvrez nos ordinateurs, smartphones, accessoires et plus encore aux meilleurs prix."
 
   return (
     <>
       <Helmet>
-        <title>GCO-Store | Matériel informatique et high-tech</title>
+        <title>GQ Store | Matériel informatique et high-tech</title>
         <meta name="description" content={siteDescription} />
-        <meta name="keywords" content="matériel informatique, high-tech, ordinateurs, smartphones, accessoires, électronique, GCO-Store" />
+        <meta name="keywords" content="matériel informatique, high-tech, ordinateurs, smartphones, accessoires, électronique, GQ Store" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="GCO-Store | Matériel informatique et high-tech" />
+        <meta property="og:title" content="GQ Store | Matériel informatique et high-tech" />
         <meta property="og:description" content={siteDescription} />
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>

@@ -67,7 +67,7 @@ export default function AdminLayout() {
       <aside className="hidden lg:flex flex-col admin-sidebar">
         <div className="mb-8">
           <Link to="/" className="text-xl font-bold text-white">
-            GCO<span className="text-primary-400">-Store</span>
+            GQ<span className="text-primary-400">-Store</span>
           </Link>
           <p className="text-xs text-gray-500 mt-1">Administration</p>
         </div>
@@ -97,7 +97,7 @@ export default function AdminLayout() {
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-footer text-white z-50 px-4 py-3 flex items-center justify-between">
         <Link to="/" className="text-lg font-bold">
-          GCO<span className="text-primary-400">-Store</span>
+          GQ<span className="text-primary-400">-Store</span>
         </Link>
         <button onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X size={24} /> : <Menu size={24} />}

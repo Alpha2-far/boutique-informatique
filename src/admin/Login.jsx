@@ -35,7 +35,7 @@ export default function Login() {
             <ShoppingCart size={28} className="text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">
-            GCO<span className="text-primary-400">-Store</span>
+            GQ<span className="text-primary-400">-Store</span>
           </h1>
           <p className="text-gray-400 text-sm mt-1">Espace Administration</p>
         </div>
@@ -66,7 +66,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="admin@gco-store.com"
+                  placeholder="admin@gq-store.com"
                   className="input-field pl-10"
                 />
               </div>

@@ -1,4 +1,4 @@
--- GCO-Store Database Schema
+-- GQ Store Database Schema
 -- Run this in your Supabase SQL Editor
 
 -- 1. Categories

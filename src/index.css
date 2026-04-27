@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --primary: #1D4ED8;
-  --primary-dark: #1E3A8A;
+  --primary: #5B21B6;
+  --primary-dark: #4A0D8F;
   --accent-violet: #8B5CF6;
   --accent-green: #25D366;
   --bg-primary: #FFFFFF;
@@ -14,7 +14,7 @@
   --text-secondary: #4B5563;
   --text-muted: #6B7280;
   --border: #E5E7EB;
-  --footer-bg: #0F172A;
+  --footer-bg: #1A0533;
   --whatsapp: #25D366;
 }
 

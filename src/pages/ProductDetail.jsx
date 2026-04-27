@@ -101,14 +101,14 @@ export default function ProductDetail() {
   return (
     <>
       <Helmet>
-        <title>{product.nom} | GCO-Store</title>
-        <meta name="description" content={product.description?.substring(0, 160) || `Achetez ${product.nom} au meilleur prix chez GCO-Store. Prix: ${formatPrice(product.prix)}`} />
+        <title>{product.nom} | GQ Store</title>
+        <meta name="description" content={product.description?.substring(0, 160) || `Achetez ${product.nom} au meilleur prix chez GQ Store. Prix: ${formatPrice(product.prix)}`} />
         <meta name="keywords" content={`${product.nom}, ${product.categories?.nom || ''}, matériel informatique, high-tech, ${product.marque || ''}`} />
 
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="product" />
-        <meta property="og:title" content={`${product.nom} | GCO-Store`} />
-        <meta property="og:description" content={product.description?.substring(0, 160) || `Achetez ${product.nom} au meilleur prix chez GCO-Store`} />
+        <meta property="og:title" content={`${product.nom} | GQ Store`} />
+        <meta property="og:description" content={product.description?.substring(0, 160) || `Achetez ${product.nom} au meilleur prix chez GQ Store`} />
         <meta property="og:image" content={imageUrl || 'https://via.placeholder.com/1200x1200'} />
         <meta property="og:price:amount" content={product.prix} />
         <meta property="og:price:currency" content="XOF" />
@@ -117,8 +117,8 @@ export default function ProductDetail() {
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${product.nom} | GCO-Store`} />
-        <meta name="twitter:description" content={product.description?.substring(0, 160) || `Achetez ${product.nom} au meilleur prix chez GCO-Store`} />
+        <meta name="twitter:title" content={`${product.nom} | GQ Store`} />
+        <meta name="twitter:description" content={product.description?.substring(0, 160) || `Achetez ${product.nom} au meilleur prix chez GQ Store`} />
         <meta name="twitter:image" content={imageUrl || 'https://via.placeholder.com/1200x1200'} />
 
         {/* Schema.org structured data */}
@@ -129,7 +129,7 @@ export default function ProductDetail() {
             "name": product.nom,
             "description": product.description,
             "image": imageUrl,
-            "brand": product.marque || "GCO-Store",
+            "brand": product.marque || "GQ Store",
             "offers": {
               "@type": "Offer",
               "price": product.prix,

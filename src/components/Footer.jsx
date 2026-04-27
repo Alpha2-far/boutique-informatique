@@ -8,13 +8,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-primary-700 rounded-lg flex items-center justify-center">
-                <ShoppingCart size={18} className="text-white" />
-              </div>
-              <span className="text-xl font-bold text-white">
-                GCO<span className="text-primary-400">-Store</span>
-              </span>
+            <Link to="/" className="flex items-center mb-4">
+              <img 
+                src="https://res.cloudinary.com/dpknc20k0/image/upload/f_auto,q_auto/gco-store-logo" 
+                alt="GQ-Store Logo" 
+                className="h-10 w-auto brightness-0 invert"
+              />
             </Link>
             <p className="text-sm text-gray-400 leading-relaxed">
               Votre partenaire de confiance pour le matériel informatique et high-tech de qualité au Bénin.
@@ -33,12 +32,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link to="/boutique" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Notre Boutique
                 </Link>
               </li>
               <li>
-                <Link to="/" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link to="/contact" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Contact
                 </Link>
               </li>
@@ -57,7 +56,7 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-2.5">
                 <Mail size={14} className="mt-0.5 shrink-0 text-primary-400" />
-                <span className="text-sm text-gray-400">contact@gco-store.com</span>
+                <span className="text-sm text-gray-400">contact@gq-store.com</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <MapPin size={14} className="mt-0.5 shrink-0 text-primary-400" />
@@ -94,7 +93,7 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="container-main py-5">
           <p className="text-center text-sm text-gray-500">
-            © {new Date().getFullYear()} GCO-Store. Tous droits réservés.
+            © {new Date().getFullYear()} GQ-Store. Tous droits réservés.
           </p>
         </div>
       </div>
