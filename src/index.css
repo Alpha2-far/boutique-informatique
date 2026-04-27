@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #1D4ED8;
+  --primary-dark: #1E3A8A;
+  --accent-violet: #8B5CF6;
+  --accent-green: #25D366;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F9FAFB;
+  --bg-tertiary: #F3F4F6;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
+  --border: #E5E7EB;
+  --footer-bg: #0F172A;
+  --whatsapp: #25D366;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Utility classes */
+@layer components {
+  .container-main {
+    @apply max-w-container mx-auto px-4 md:px-8;
+  }
+
+  .btn-primary {
+    @apply bg-primary-700 hover:bg-primary-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply bg-white border border-border text-text-primary hover:bg-surface-tertiary font-medium py-2.5 px-5 rounded-lg transition-all duration-200 inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-whatsapp {
+    @apply bg-accent-green hover:brightness-110 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 inline-flex items-center justify-center gap-2;
+  }
+
+  .badge-neuf {
+    @apply bg-primary-700 text-white text-xs font-bold px-2.5 py-1 rounded;
+  }
+
+  .badge-occasion {
+    @apply bg-accent-violet text-white text-xs font-bold px-2.5 py-1 rounded;
+  }
+
+  .input-field {
+    @apply w-full border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700 focus:border-transparent transition-all duration-200 bg-white;
+  }
+
+  .select-field {
+    @apply w-full border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-700 focus:border-transparent transition-all duration-200 bg-white appearance-none cursor-pointer;
+  }
+
+  .card {
+    @apply bg-white border border-border rounded-lg overflow-hidden transition-all duration-200;
+  }
+
+  .spec-cell {
+    @apply bg-surface-tertiary rounded-lg p-4 flex items-start gap-3;
+  }
+}
+
+/* Price formatting */
+.price-format {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Line clamp */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Admin sidebar */
+.admin-sidebar {
+  @apply bg-footer text-white min-h-screen w-64 p-6;
+}
+
+.admin-nav-item {
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200 text-sm font-medium;
+}
+
+.admin-nav-item.active {
+  @apply bg-primary-700 text-white;
+}
