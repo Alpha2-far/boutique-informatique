@@ -162,11 +162,25 @@ export default function ProductForm() {
             </div>
             <div>
               <label className="block text-xs font-medium text-text-muted mb-1">État</label>
-              <div className="flex bg-surface-tertiary rounded-lg p-0.5">
-                {['neuf', 'occasion'].map(v => (
-                  <button key={v} type="button" onClick={() => setForm({...form, etat: v})}
-                    className={`flex-1 text-sm font-medium py-2 rounded-md transition-all ${form.etat === v ? 'bg-white shadow-sm text-text-primary' : 'text-text-muted'}`}>
-                    {v === 'neuf' ? 'Neuf' : 'Occasion'}
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: 'neuf', label: 'Neuf' },
+                  { value: 'occasion', label: 'Occasion' },
+                  { value: 'venue_propre', label: 'Venue propre' },
+                  { value: 'reconditionné', label: 'Reconditionné' },
+                  { value: 'pour_pieces', label: 'Pour pièces' },
+                ].map(option => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setForm({ ...form, etat: option.value })}
+                    className={`text-sm font-medium py-2 px-3 rounded-lg transition-all border ${
+                      form.etat === option.value
+                        ? 'bg-[#4A0D8F] text-white border-[#4A0D8F]'
+                        : 'bg-surface-tertiary text-text-muted border-border hover:border-primary-300'
+                    }`}
+                  >
+                    {option.label}
                   </button>
                 ))}
               </div>
