@@ -1,0 +1,674 @@
+{
+  "name": "GQ Store Telegram Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"]
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "credentials": {
+        "telegramBotApi": {
+          "id": "telegram-bot-cred",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.message.text }}",
+              "operation": "startsWith",
+              "value2": "/categorie"
+            }
+          ]
+        }
+      },
+      "id": "check-categorie",
+      "name": "Check /categorie",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraire le nom de la catégorie après /categorie\nconst text = $input.first().json.message.text;\nconst categoryName = text.replace('/categorie', '').trim();\nconst slug = categoryName.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');\n\nreturn {\n  nom: categoryName,\n  slug: slug,\n  ordre: 0\n};"
+      },
+      "id": "extract-categorie",
+      "name": "Extract Catégorie Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "categories",
+        "columns": "nom, slug, ordre",
+        "values": "={{ JSON.stringify([$input.first().json]) }}"
+      },
+      "id": "insert-categorie",
+      "name": "Supabase - Insert Catégorie",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [850, 200],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-cred",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ `Catégorie ${$input.first().json.nom} créée ✅` }}",
+        "additionalFields": {
+          "chat_id": "={{ $input.first().json.message.chat.id }}"
+        }
+      },
+      "id": "reply-categorie",
+      "name": "Telegram - Reply Catégorie",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1050, 200],
+      "credentials": {
+        "telegramBotApi": {
+          "id": "telegram-bot-cred",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-3.3-70b-instruct",
+        "messages": {
+          "message": [
+            {
+              "role": "system",
+              "content": "Extract product info and return ONLY valid JSON with keys: nom, description, prix (number), categorie (text), etat (must be exactly one of: neuf, occasion, venue_propre, reconditionné, pour_pieces), stock (default 1), en_vedette (true), specs (array of objects with libelle and valeur). No explanations, only JSON."
+            },
+            {
+              "role": "user",
+              "content": "={{ $input.first().json.message.text }}"
+            }
+          ]
+        }
+      },
+      "id": "openrouter",
+      "name": "OpenRouter - Extract Product",
+      "type": "@n8n/n8n-nodes-langchain.openRouter",
+      "typeVersion": 1,
+      "position": [650, 400],
+      "credentials": {
+        "openRouterApi": {
+          "id": "openrouter-cred",
+          "name": "OpenRouter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parser la réponse JSON d'OpenRouter\nconst response = JSON.parse($input.first().json.message.content);\nconst slug = response.nom.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');\n\nreturn {\n  nom: response.nom,\n  slug: slug,\n  description: response.description || '',\n  prix: response.prix,\n  categorie: response.categorie,\n  etat: response.etat || 'neuf',\n  stock: response.stock || 1,\n  en_vedette: response.en_vedette ?? true,\n  specs: response.specs || []\n};"
+      },
+      "id": "parse-product",
+      "name": "Parse Product JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "table": "categories",
+        "columns": "id, nom, slug",
+        "filterType": "string",
+        "filterString": "=slug={{ $input.first().json.categorie.toLowerCase().replace(/ /g, '-') }}"
+      },
+      "id": "check-category-exists",
+      "name": "Supabase - Check Catégorie",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-cred",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $input.first().json.length }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "category-exists-if",
+      "name": "Catégorie existe ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer l'ID de la catégorie existante\nreturn {\n  categorie_id: $input.first().json[0].id\n};"
+      },
+      "id": "get-existing-cat-id",
+      "name": "Get Existing Cat ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 350]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "categories",
+        "columns": "nom, slug, ordre",
+        "values": "={{ JSON.stringify([{ nom: $input.first().json.categorie, slug: $input.first().json.categorie.toLowerCase().replace(/ /g, '-'), ordre: 0 }]) }}"
+      },
+      "id": "create-new-category",
+      "name": "Supabase - Create Catégorie",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1450, 450],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-cred",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fusionner les IDs de catégorie\nlet catId = '';\nif ($input.first().json.categorie_id) {\n  catId = $input.first().json.categorie_id;\n} else if ($input.last().json && $input.last().json[0] && $input.last().json[0].id) {\n  catId = $input.last().json[0].id;\n}\n\nreturn {\n  ...$input.first().json,\n  categorie_id: catId\n};"
+      },
+      "id": "merge-cat-id",
+      "name": "Merge Catégorie ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1650, 400]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "products",
+        "columns": "nom, slug, description, prix, categorie_id, etat, stock, en_vedette, actif",
+        "values": "={{ JSON.stringify([{ nom: $input.first().json.nom, slug: $input.first().json.slug, description: $input.first().json.description, prix: $input.first().json.prix, categorie_id: $input.first().json.categorie_id, etat: $input.first().json.etat, stock: $input.first().json.stock, en_vedette: $input.first().json.en_vedette, actif: true }]) }}"
+      },
+      "id": "insert-product",
+      "name": "Supabase - Insert Product",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1850, 400],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-cred",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Préparer les specs pour insertion\nconst specs = $input.first().json.specs || [];\nconst productId = $input.first().json.id; // ID du produit nouvellement créé\n\nreturn specs.map((spec, idx) => ({\n  product_id: productId,\n  libelle: spec.libelle,\n  valeur: spec.valeur,\n  ordre: idx\n}));"
+      },
+      "id": "prepare-specs",
+      "name": "Prepare Specs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2050, 400]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "product_specs",
+        "columns": "product_id, libelle, valeur, ordre",
+        "values": "={{ JSON.stringify($input.first().json) }}"
+      },
+      "id": "insert-specs",
+      "name": "Supabase - Insert Specs",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2250, 400],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-cred",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ Object.keys($input.first().json.message).join(',') }}",
+              "operation": "contains",
+              "value2": "photo"
+            }
+          ]
+        }
+      },
+      "id": "check-photos",
+      "name": "Has Photos ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2450, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraire les file_ids des photos Telegram\nconst photos = $input.first().json.message.photo || [];\nconst fileId = photos[photos.length - 1].file_id; // Plus haute résolution\n\nreturn { file_id: fileId };"
+      },
+      "id": "get-photo-id",
+      "name": "Get Photo File ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2650, 350]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot{{ $credentials.telegramBotApi.token }}/getFile",
+        "queryParameters": {
+          "file_id": "={{ $input.first().json.file_id }}"
+        }
+      },
+      "id": "get-file-path",
+      "name": "Telegram - Get File Path",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2850, 350],
+      "credentials": {
+        "telegramBotApi": {
+          "id": "telegram-bot-cred",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.telegram.org/file/bot{{ $credentials.telegramBotApi.token }}/{{ $input.first().json.result.file_path }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "download-photo",
+      "name": "Download Photo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [3050, 350],
+      "credentials": {
+        "telegramBotApi": {
+          "id": "telegram-bot-cred",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloudinary.com/v1_1/dtkbsdljb/image/upload",
+        "sendBody": {
+          "bodyParameters": [
+            {
+              "name": "file",
+              "attachments": {
+                "property": "data"
+              }
+            },
+            {
+              "name": "upload_preset",
+              "value": "ygmkofzr"
+            },
+            {
+              "name": "folder",
+              "value": "gco-store/products"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "upload-cloudinary",
+      "name": "Cloudinary Upload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [3250, 350]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Préparer les données d'image pour insertion\nconst productId = $('Supabase - Insert Product').item.json.id;\nconst cloudinaryData = $input.first().json;\n\nreturn [{\n  product_id: productId,\n  cloudinary_url: cloudinaryData.secure_url,\n  cloudinary_public_id: cloudinaryData.public_id,\n  est_principale: true,\n  ordre: 0\n}];"
+      },
+      "id": "prepare-images",
+      "name": "Prepare Images Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3450, 350]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "product_images",
+        "columns": "product_id, cloudinary_url, cloudinary_public_id, est_principale, ordre",
+        "values": "={{ JSON.stringify($input.first().json) }}"
+      },
+      "id": "insert-images",
+      "name": "Supabase - Insert Images",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [3650, 350],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-cred",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ `Produit ${$('Supabase - Insert Product').item.json.nom} ajouté ✅` }}",
+        "additionalFields": {
+          "chat_id": "={{ $input.first().json.message.chat.id }}"
+        }
+      },
+      "id": "reply-product",
+      "name": "Telegram - Reply Product",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [3850, 400],
+      "credentials": {
+        "telegramBotApi": {
+          "id": "telegram-bot-cred",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check /categorie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check /categorie": {
+      "main": [
+        [
+          {
+            "node": "Extract Catégorie Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OpenRouter - Extract Product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Catégorie Info": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Insert Catégorie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Insert Catégorie": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Reply Catégorie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter - Extract Product": {
+      "main": [
+        [
+          {
+            "node": "Parse Product JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Product JSON": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Check Catégorie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Check Catégorie": {
+      "main": [
+        [
+          {
+            "node": "Catégorie existe ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Catégorie existe ?": {
+      "main": [
+        [
+          {
+            "node": "Get Existing Cat ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase - Create Catégorie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Existing Cat ID": {
+      "main": [
+        [
+          {
+            "node": "Merge Catégorie ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Create Catégorie": {
+      "main": [
+        [
+          {
+            "node": "Merge Catégorie ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Catégorie ID": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Insert Product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Insert Product": {
+      "main": [
+        [
+          {
+            "node": "Prepare Specs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Specs": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Insert Specs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Insert Specs": {
+      "main": [
+        [
+          {
+            "node": "Has Photos ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Photos ?": {
+      "main": [
+        [
+          {
+            "node": "Get Photo File ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram - Reply Product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Photo File ID": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Get File Path",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Get File Path": {
+      "main": [
+        [
+          {
+            "node": "Download Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Photo": {
+      "main": [
+        [
+          {
+            "node": "Cloudinary Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cloudinary Upload": {
+      "main": [
+        [
+          {
+            "node": "Prepare Images Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Images Data": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Insert Images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Insert Images": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Reply Product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "gq-store-telegram-bot-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "gq-store"
+  },
+  "tags": [
+    {
+      "name": "GQ Store",
+      "id": "gq-store-tag"
+    },
+    {
+      "name": "Telegram",
+      "id": "telegram-tag"
+    }
+  ]
+}
