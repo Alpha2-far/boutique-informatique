@@ -86,30 +86,33 @@
     {
       "parameters": {
         "model": "meta-llama/llama-3.3-70b-instruct",
-        "messages": {
-          "message": [
-            {
-              "role": "system",
-              "content": "Extract product info and return ONLY valid JSON with keys: nom, description, prix (number), categorie (text), etat (must be exactly one of: neuf, occasion, venue_propre, reconditionné, pour_pieces), stock (default 1), en_vedette (true), specs (array of objects with libelle and valeur). No explanations, only JSON."
-            },
-            {
-              "role": "user",
-              "content": "={{ $input.first().json.message.text }}"
-            }
-          ]
-        }
+        "options": {}
       },
-      "id": "openrouter",
-      "name": "OpenRouter - Extract Product",
-      "type": "@n8n/n8n-nodes-langchain.openRouter",
+      "id": "openrouter-llm",
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
-      "position": [650, 400],
+      "position": [650, 350],
       "credentials": {
         "openRouterApi": {
           "id": "openrouter-cred",
           "name": "OpenRouter"
         }
       }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "prompt": "=Extract product info from this text and return ONLY valid JSON with keys: nom, description, prix (number), categorie (text), etat (must be exactly one of: neuf, occasion, venue_propre, reconditionné, pour_pieces), stock (default 1), en_vedette (true), specs (array of objects with libelle and valeur). No explanations, only JSON.\n\nText: {{ $input.first().json.message.text }}",
+        "options": {
+          "systemMessage": "You are a JSON extractor. Return ONLY valid JSON, no markdown, no explanations."
+        }
+      },
+      "id": "openrouter-chain",
+      "name": "OpenRouter - Extract Product",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [650, 450]
     },
     {
       "parameters": {
@@ -445,6 +448,17 @@
           {
             "node": "Telegram - Reply Catégorie",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "OpenRouter - Extract Product",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]
