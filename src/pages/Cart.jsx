@@ -173,9 +173,9 @@ export default function Cart() {
 
             <button 
               onClick={handleCheckout}
-              className="w-full btn-primary py-3 rounded-xl font-semibold mb-3 flex items-center justify-center gap-2"
+              className="w-full btn-whatsapp py-3 rounded-xl font-semibold mb-3 flex items-center justify-center gap-2"
             >
-              <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" className="w-5 h-5 brightness-0 invert" />
+              <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" className="w-5 h-5" />
               Passer la commande
             </button>
 
