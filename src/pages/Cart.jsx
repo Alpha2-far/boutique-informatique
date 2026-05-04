@@ -69,75 +69,79 @@ export default function Cart() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-white rounded-xl border border-border p-4 flex gap-4"
+              className="bg-white rounded-xl border border-border p-4 flex flex-col sm:flex-row sm:items-center gap-4 relative"
             >
-              {/* Image */}
-              <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
-                {item.product_images && item.product_images[0] ? (
-                  <img
-                    src={item.product_images[0].cloudinary_url}
-                    alt={item.nom}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-text-muted">
-                    <Package className="w-8 h-8" />
-                  </div>
-                )}
-              </div>
-
-              {/* Infos produit */}
-              <div className="flex-1">
-                <Link
-                  to={`/produit/${item.slug}`}
-                  className="font-semibold text-text-primary hover:text-primary transition-colors"
-                >
-                  {item.nom}
-                </Link>
-                <p className="text-sm text-text-muted mt-1">
-                  {item.categories?.nom || 'Catégorie non disponible'}
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className={`badge-${item.etat === 'neuf' ? 'neuf' : 'occasion'}`}>
-                    {item.etat === 'neuf' ? 'Neuf' : 'Occasion'}
-                  </span>
-                  {item.marque && (
-                    <span className="text-xs text-text-muted">Marque: {item.marque}</span>
+              <div className="flex gap-3 sm:gap-4 flex-1">
+                {/* Image */}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                  {item.product_images && item.product_images[0] ? (
+                    <img
+                      src={item.product_images[0].cloudinary_url}
+                      alt={item.nom}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-text-muted">
+                      <Package className="w-6 h-6 sm:w-8 sm:h-8" />
+                    </div>
                   )}
+                </div>
+
+                {/* Infos produit */}
+                <div className="flex-1 pr-8 sm:pr-0">
+                  <Link
+                    to={`/produit/${item.slug}`}
+                    className="font-semibold text-text-primary hover:text-primary transition-colors text-sm sm:text-base line-clamp-2"
+                  >
+                    {item.nom}
+                  </Link>
+                  <p className="text-xs sm:text-sm text-text-muted mt-1">
+                    {item.categories?.nom || 'Catégorie non disponible'}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mt-1.5 sm:mt-2">
+                    <span className={`badge-${item.etat === 'neuf' ? 'neuf' : 'occasion'}`}>
+                      {item.etat === 'neuf' ? 'Neuf' : 'Occasion'}
+                    </span>
+                    {item.marque && (
+                      <span className="text-xs text-text-muted">Marque: {item.marque}</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Prix et quantité */}
-              <div className="text-right">
-                <p className="text-lg font-bold text-primary">
-                  {item.prix.toLocaleString('fr-FR')} FCFA
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <button
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
-                    aria-label="Diminuer la quantité"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="w-10 text-center font-medium">{item.quantity}</span>
-                  <button
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
-                    aria-label="Augmenter la quantité"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
+              <div className="flex items-center justify-between sm:w-auto w-full border-t border-border sm:border-0 pt-3 sm:pt-0">
+                <div className="flex sm:flex-col items-center sm:items-end gap-3 sm:gap-2 flex-1 sm:flex-initial justify-between sm:justify-start">
+                  <p className="text-base sm:text-lg font-bold text-primary">
+                    {item.prix.toLocaleString('fr-FR')} FCFA
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="p-1.5 sm:p-1 rounded-lg hover:bg-gray-100 transition-colors bg-surface-tertiary sm:bg-transparent"
+                      aria-label="Diminuer la quantité"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-6 sm:w-10 text-center font-medium">{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="p-1.5 sm:p-1 rounded-lg hover:bg-gray-100 transition-colors bg-surface-tertiary sm:bg-transparent"
+                      aria-label="Augmenter la quantité"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Bouton supprimer */}
               <button
                 onClick={() => removeItem(item.id)}
-                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors self-start"
+                className="absolute top-3 right-3 sm:static p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors self-start"
                 aria-label="Supprimer l'article"
               >
-                <Trash2 className="w-5 h-5" />
+                <Trash2 className="w-5 h-5 sm:w-5 sm:h-5" />
               </button>
             </motion.div>
           ))}
