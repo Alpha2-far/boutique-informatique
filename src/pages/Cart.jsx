@@ -9,6 +9,18 @@ export default function Cart() {
   const totalItems = getTotalItems()
   const totalPrice = getTotalPrice()
 
+  const handleCheckout = () => {
+    const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '22998471366'
+    let message = `Bonjour GQ Store !\nJe souhaite passer une commande pour les articles suivants :\n\n`
+    items.forEach(item => {
+      message += `- ${item.quantity}x ${item.nom} (${item.prix.toLocaleString('fr-FR')} FCFA)\n`
+    })
+    message += `\n*Total : ${totalPrice.toLocaleString('fr-FR')} FCFA*`
+    
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+    window.open(url, '_blank')
+  }
+
   if (items.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
@@ -159,7 +171,11 @@ export default function Cart() {
               </div>
             </div>
 
-            <button className="w-full btn-primary py-3 rounded-xl font-semibold mb-3">
+            <button 
+              onClick={handleCheckout}
+              className="w-full btn-primary py-3 rounded-xl font-semibold mb-3 flex items-center justify-center gap-2"
+            >
+              <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" className="w-5 h-5 brightness-0 invert" />
               Passer la commande
             </button>
 

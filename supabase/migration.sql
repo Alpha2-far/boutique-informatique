@@ -19,7 +19,7 @@ create table if not exists products (
   description text,
   prix numeric not null,
   categorie_id uuid references categories(id) on delete set null,
-  etat text check (etat in ('neuf', 'occasion')) default 'neuf',
+  etat text check (etat in ('neuf', 'occasion', 'venue_propre', 'reconditionné', 'pour_pieces')) default 'neuf',
   stock int default 0,
   en_vedette boolean default false,
   actif boolean default true,
