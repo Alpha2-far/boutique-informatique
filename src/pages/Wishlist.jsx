@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Heart, ShoppingCart, Trash2, ArrowRight } from 'lucide-react'
 import { useWishlistStore } from '../store/wishlistStore'
 import { useCartStore } from '../store/cartStore'
+import { formatEtat, getEtatBadgeClass } from '../lib/utils'
 import { motion } from 'framer-motion'
 
 export default function Wishlist() {
@@ -100,8 +101,8 @@ export default function Wishlist() {
               </p>
 
               <div className="flex items-center gap-2 mt-2">
-                <span className={`badge-${product.etat === 'neuf' ? 'neuf' : 'occasion'}`}>
-                  {product.etat === 'neuf' ? 'Neuf' : 'Occasion'}
+                <span className={getEtatBadgeClass(product.etat)}>
+                  {formatEtat(product.etat)}
                 </span>
               </div>
 

@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Eye, EyeOff, Search } from 'lucide-react'
 import { fetchAllProducts, fetchCategories, toggleProductActive, deleteProduct } from '../lib/supabase'
 import { getOptimizedUrl } from '../lib/cloudinary'
 import { formatPrice, getMainImage } from '../components/ProductCard'
+import { formatEtat, getEtatBadgeClass } from '../lib/utils'
 
 export default function Products() {
   const [products, setProducts] = useState([])
@@ -66,6 +67,9 @@ export default function Products() {
           <option value="">Tous états</option>
           <option value="neuf">Neuf</option>
           <option value="occasion">Occasion</option>
+          <option value="venue_propre">Venue propre</option>
+          <option value="reconditionné">Reconditionné</option>
+          <option value="pour_pieces">Pour pièces</option>
         </select>
       </div>
 
@@ -98,8 +102,8 @@ export default function Products() {
                     <td className="px-4 py-3 text-sm font-medium text-text-primary max-w-[200px] truncate">{p.nom}</td>
                     <td className="px-4 py-3 text-sm text-text-muted">{p.categories?.nom || '—'}</td>
                     <td className="px-4 py-3">
-                      <span className={p.etat === 'neuf' ? 'badge-neuf' : 'badge-occasion'}>
-                        {p.etat === 'neuf' ? 'Neuf' : 'Occasion'}
+                      <span className={getEtatBadgeClass(p.etat)}>
+                        {formatEtat(p.etat)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm font-semibold text-text-primary text-right price-format">{formatPrice(p.prix)}</td>

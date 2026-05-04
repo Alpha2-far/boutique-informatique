@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, Package } from 'lucide-react'
 import { useCartStore } from '../store/cartStore'
+import { formatEtat, getEtatBadgeClass } from '../lib/utils'
 import { motion } from 'framer-motion'
 
 export default function Cart() {
@@ -99,8 +100,8 @@ export default function Cart() {
                     {item.categories?.nom || 'Catégorie non disponible'}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-1.5 sm:mt-2">
-                    <span className={`badge-${item.etat === 'neuf' ? 'neuf' : 'occasion'}`}>
-                      {item.etat === 'neuf' ? 'Neuf' : 'Occasion'}
+                    <span className={getEtatBadgeClass(item.etat)}>
+                      {formatEtat(item.etat)}
                     </span>
                     {item.marque && (
                       <span className="text-xs text-text-muted">Marque: {item.marque}</span>

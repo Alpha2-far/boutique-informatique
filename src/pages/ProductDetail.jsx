@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { fetchProductBySlug, fetchSimilarProducts, fetchProductReviews } from '../lib/supabase'
 import { getOptimizedUrl } from '../lib/cloudinary'
+import { formatEtat, getEtatBadgeClass } from '../lib/utils'
 import ProductCard, { formatPrice, getMainImage } from '../components/ProductCard'
 import Reviews from '../components/Reviews'
 import { useCartStore } from '../store/cartStore'
@@ -223,8 +224,8 @@ export default function ProductDetail() {
               transition={{ duration: 0.4, delay: 0.1 }}
             >
               {/* Badge */}
-              <span className={product.etat === 'neuf' ? 'badge-neuf' : 'badge-occasion'}>
-                {product.etat === 'neuf' ? 'Neuf' : 'Occasion'}
+              <span className={getEtatBadgeClass(product.etat)}>
+                {formatEtat(product.etat)}
               </span>
 
               {/* Name */}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ShoppingCart, Star, Heart } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { getOptimizedUrl } from '../lib/cloudinary'
+import { formatEtat, getEtatBadgeClass } from '../lib/utils'
 import { useCartStore } from '../store/cartStore'
 import { useWishlistStore } from '../store/wishlistStore'
 
@@ -83,8 +84,8 @@ export default function ProductCard({ product }) {
       <div className="relative aspect-square bg-surface-tertiary overflow-hidden">
         {/* Badge */}
         <div className="absolute top-2.5 left-2.5 z-10">
-          <span className={product.etat === 'neuf' ? 'badge-neuf' : 'badge-occasion'}>
-            {product.etat === 'neuf' ? 'Neuf' : 'Occasion'}
+          <span className={getEtatBadgeClass(product.etat)}>
+            {formatEtat(product.etat)}
           </span>
         </div>
 
