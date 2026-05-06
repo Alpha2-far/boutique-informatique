@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Farel VIAHO/Downloads/**)",
+      "Bash(unzip africa_cargo_skills.zip)",
+      "Bash(mkdir -p ~/.claude/skills)",
+      "Bash(cp -r ~/Downloads/africa_cargo_deliverables/skills/africa-cargo-* ~/.claude/skills/)"
+    ]
+  }
+}

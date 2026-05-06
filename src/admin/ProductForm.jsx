@@ -9,6 +9,26 @@ function generateSlug(text) {
     .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
+async function generateUniqueSlug(text, currentProductId = null) {
+  const baseSlug = generateSlug(text)
+  let slug = baseSlug
+  let suffix = 2
+
+  while (true) {
+    let query = supabase.from('products').select('id').eq('slug', slug)
+    // Si on édite un produit, on exclut le produit actuel de la vérification
+    if (currentProductId) {
+      query = query.neq('id', currentProductId)
+    }
+    const { data } = await query.maybeSingle()
+    if (!data) break // slug disponible
+    slug = `${baseSlug}-${suffix}`
+    suffix++
+  }
+
+  return slug
+}
+
 export default function ProductForm() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -19,7 +39,7 @@ export default function ProductForm() {
   const [uploading, setUploading] = useState(false)
   const [form, setForm] = useState({
     nom: '', description: '', prix: '', categorie_id: '',
-    etat: 'neuf', stock: 0, en_vedette: false, actif: true,
+    etat: 'neuf', en_vedette: false, actif: true,
   })
   const [images, setImages] = useState([])
   const [specs, setSpecs] = useState([])
@@ -38,7 +58,7 @@ export default function ProductForm() {
     setForm({
       nom: data.nom, description: data.description || '',
       prix: data.prix, categorie_id: data.categorie_id || '',
-      etat: data.etat, stock: data.stock,
+      etat: data.etat,
       en_vedette: data.en_vedette, actif: data.actif,
     })
     setImages((data.product_images || []).sort((a, b) => a.ordre - b.ordre).map(i => ({
@@ -102,11 +122,12 @@ export default function ProductForm() {
     if (!form.nom.trim() || !form.prix) return
     setSaving(true)
     try {
+      const uniqueSlug = await generateUniqueSlug(form.nom, isEdit ? id : null)
       const productData = {
-        nom: form.nom.trim(), slug: generateSlug(form.nom),
+        nom: form.nom.trim(), slug: uniqueSlug,
         description: form.description.trim() || null,
         prix: parseFloat(form.prix), categorie_id: form.categorie_id || null,
-        etat: form.etat, stock: parseInt(form.stock) || 0,
+        etat: form.etat,
         en_vedette: form.en_vedette, actif: form.actif,
       }
       if (isEdit) productData.id = id
@@ -184,11 +205,6 @@ export default function ProductForm() {
                   </button>
                 ))}
               </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-text-muted mb-1">Stock</label>
-              <input type="number" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})}
-                className="input-field" min="0" />
             </div>
             <div className="flex items-center gap-6">
               <label className="flex items-center gap-2 cursor-pointer">

@@ -85,7 +85,7 @@ export default function Products() {
               <th className="text-left text-xs font-semibold text-text-muted px-4 py-3">Catégorie</th>
               <th className="text-left text-xs font-semibold text-text-muted px-4 py-3">État</th>
               <th className="text-right text-xs font-semibold text-text-muted px-4 py-3">Prix</th>
-              <th className="text-center text-xs font-semibold text-text-muted px-4 py-3">Stock</th>
+
               <th className="text-center text-xs font-semibold text-text-muted px-4 py-3">Actif</th>
               <th className="text-right text-xs font-semibold text-text-muted px-4 py-3">Actions</th>
             </tr></thead>
@@ -107,7 +107,7 @@ export default function Products() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm font-semibold text-text-primary text-right price-format">{formatPrice(p.prix)}</td>
-                    <td className="px-4 py-3 text-sm text-center text-text-muted">{p.stock}</td>
+
                     <td className="px-4 py-3 text-center">
                       <button onClick={() => handleToggle(p.id, p.actif)}
                         className={`p-1.5 rounded-lg ${p.actif ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'}`}>

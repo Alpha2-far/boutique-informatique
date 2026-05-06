@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import {
   ChevronRight,
   ShoppingCart,
-  Package,
+
   Star,
   Check,
 } from 'lucide-react'
@@ -113,7 +113,7 @@ export default function ProductDetail() {
         <meta property="og:image" content={imageUrl || 'https://via.placeholder.com/1200x1200'} />
         <meta property="og:price:amount" content={product.prix} />
         <meta property="og:price:currency" content="XOF" />
-        <meta property="product:availability" content={product.stock > 0 ? 'in stock' : 'out of stock'} />
+        <meta property="product:availability" content="in stock" />
         <meta property="product:condition" content={product.etat === 'neuf' ? 'new' : 'used'} />
 
         {/* Twitter */}
@@ -135,7 +135,7 @@ export default function ProductDetail() {
               "@type": "Offer",
               "price": product.prix,
               "priceCurrency": "XOF",
-              "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              "availability": "https://schema.org/InStock",
               "condition": product.etat === 'neuf' ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition"
             },
             "aggregateRating": reviews.length > 0 ? {
@@ -263,13 +263,7 @@ export default function ProductDetail() {
                 </p>
               </div>
 
-              {/* Stock */}
-              <div className="flex items-center gap-2 mb-6">
-                <Package size={16} className={product.stock > 0 ? 'text-green-600' : 'text-red-500'} />
-                <span className={`text-sm font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {product.stock > 0 ? `En stock (${product.stock} disponible${product.stock > 1 ? 's' : ''})` : 'Rupture de stock'}
-                </span>
-              </div>
+
 
               {/* Description */}
               {product.description && (
