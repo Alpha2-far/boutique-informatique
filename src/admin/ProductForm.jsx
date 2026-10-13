@@ -252,9 +252,23 @@ export default function ProductForm() {
               {form.nom && <p className="text-xs text-text-light mt-1">Slug: {generateSlug(form.nom)}</p>}
             </div>
             <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-text-muted mb-1">Description</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-text-muted">Description commerciale</label>
+                {rawText && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const parsed = parseRawProductText(rawText, categories)
+                      if (parsed?.description) setForm(prev => ({ ...prev, description: parsed.description }))
+                    }}
+                    className="text-xs text-[#4A0D8F] hover:underline flex items-center gap-1 font-medium transition-colors"
+                  >
+                    <Sparkles size={12} /> Regénérer la description
+                  </button>
+                )}
+              </div>
               <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})}
-                className="input-field min-h-[100px] resize-y" placeholder="Description du produit..." />
+                className="input-field min-h-[110px] resize-y text-xs sm:text-sm leading-relaxed" placeholder="Description du produit..." />
             </div>
             <div>
               <label className="block text-xs font-medium text-text-muted mb-1">Prix (FCFA)</label>

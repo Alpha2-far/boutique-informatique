@@ -7,7 +7,7 @@ export function cleanLine(line) {
   return line
     .replace(/^[•\-–—]\s*/, '') // Supprime les puces au début de ligne
     .replace(/[💻✅⚡🔋💾🖥️🔹🔸📌👉⭐️⭐📦🏷️✨✔︎✔️]/gu, '')
-    .replace(/\*/g, '') // Supprime les étoiles WhatsApp *gras*
+    .replace(/\*/g, ' ') // Remplace les étoiles WhatsApp par un espace pour éviter "15.6”Tactile"
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -268,23 +268,26 @@ export function parseRawProductText(rawText, availableCategories = []) {
   function buildSmartDescription(pNom, pRawText, pSpecs, pEtat) {
     const parts = [];
     const cpu = pSpecs.find(s => s.libelle === 'Processeur')?.valeur;
-    const ram = pSpecs.find(s => s.libelle === 'RAM')?.valeur;
-    const storage = pSpecs.find(s => s.libelle === 'Stockage')?.valeur;
+    const rawRam = pSpecs.find(s => s.libelle === 'RAM')?.valeur;
+    const rawStorage = pSpecs.find(s => s.libelle === 'Stockage')?.valeur;
     const screen = pSpecs.find(s => s.libelle === 'Écran')?.valeur;
     const battery = pSpecs.find(s => s.libelle === 'Autonomie')?.valeur;
     const format = pSpecs.find(s => s.libelle === 'Format' || s.libelle === 'Clavier')?.valeur;
 
+    const ramText = rawRam ? rawRam.replace(/^RAM\s*/i, '').trim() + ' de RAM' : '';
+    const storageText = rawStorage ? (rawStorage.toLowerCase().startsWith('ssd') ? 'un stockage ' + rawStorage : rawStorage) : '';
+
     let intro = `Le ${pNom} est un ordinateur portable moderne, fluide et performant.`;
     if (screen) {
-      intro += ` Il dispose d'un écran de ${screen},`;
+      intro += ` Équipé d'un écran ${screen},`;
     }
     if (cpu) {
-      intro += ` propulsé par un processeur ${cpu}`;
+      intro += ` il est propulsé par un processeur ${cpu}`;
     }
-    if (ram && storage) {
-      intro += ` combiné à ${ram} et un stockage ultra-rapide ${storage}.`;
-    } else if (storage) {
-      intro += ` avec un stockage ${storage}.`;
+    if (ramText && storageText) {
+      intro += ` combiné à ${ramText} et ${storageText} ultra-rapide.`;
+    } else if (storageText) {
+      intro += ` avec ${storageText}.`;
     } else {
       intro += '.';
     }
@@ -292,16 +295,16 @@ export function parseRawProductText(rawText, availableCategories = []) {
 
     const lower = pRawText.toLowerCase();
     if (lower.includes('venu propre') || lower.includes('10/10') || lower.includes('sans égratignure') || lower.includes('sans egratignure')) {
-      parts.push("Appareil venu propre, état 10/10 sans égratignure, soigneusement inspecté et testé.");
+      parts.push("Appareil venu propre (état 10/10 sans aucune égratignure), soigneusement testé et garanti fonctionnel.");
     } else if (pEtat === 'neuf') {
       parts.push("Produit neuf sous emballage d'origine garanti.");
     }
 
     const extras = [];
     if (format) extras.push(`clavier avec ${format.toLowerCase()}`);
-    if (battery) extras.push(`excellente autonomie pour travailler en toute sérénité`);
+    if (battery) extras.push(`excellente autonomie de batterie`);
     if (extras.length > 0) {
-      parts.push(`Profitez d'un confort de frappe et d'utilisation optimal avec ${extras.join(' et ')}.`);
+      parts.push(`Profitez d'un confort d'utilisation optimal avec ${extras.join(' et ')}.`);
     }
 
     parts.push("Idéal pour le travail bureautique intensif, les études, la gestion et le divertissement multimédia. Disponible chez GQ Store.");
