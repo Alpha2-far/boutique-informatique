@@ -10,7 +10,7 @@ const CONFIG = {
   SPREADSHEET_ID: '1eNJkAd_cpSeIwWeaBwy-K7aXn13tjZaq0h5JqMpw6Cc',
   DRIVE_FOLDER_ID: '1Mwl1G3GDPBq7miwZRnxTrRoYS7CLwEzq',
   ADMIN_EMAIL: 'admin@gq-store.com',
-  ADMIN_PASSWORD: 'admin' // Modifiable selon vos besoins
+  ADMIN_PASSWORD: 'gq-store'
 };
 
 /**

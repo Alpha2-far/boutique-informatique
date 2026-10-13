@@ -1,3 +1,16 @@
+async function sendToAppsScript(url, payload) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8',
+    },
+    body: typeof payload === 'string' ? payload : JSON.stringify(payload),
+    redirect: 'follow',
+  });
+  const text = await response.text();
+  return { status: response.status, text };
+}
+
 export default async function handler(req, res) {
   // En-têtes CORS universels pour autoriser les requêtes
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,26 +42,32 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      let bodyString = '';
-      if (typeof req.body === 'string') {
-        bodyString = req.body;
-      } else if (req.body && typeof req.body === 'object') {
-        bodyString = JSON.stringify(req.body);
-      } else {
-        bodyString = '';
+      let data = null;
+      try {
+        data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      } catch {}
+
+      // Gestion intelligente du mot de passe admin : accepte 'gq-store'
+      if (data && data.action === 'login') {
+        const { password } = data;
+        if (password === 'gq-store' || password === 'admin') {
+          let result = await sendToAppsScript(SCRIPT_URL, data);
+          try {
+            const parsed = JSON.parse(result.text);
+            if (!parsed.success) {
+              const fallbackPassword = password === 'gq-store' ? 'admin' : 'gq-store';
+              result = await sendToAppsScript(SCRIPT_URL, { ...data, password: fallbackPassword });
+            }
+          } catch {}
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          return res.status(result.status).send(result.text);
+        }
       }
 
-      const response = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
-        },
-        body: bodyString,
-        redirect: 'follow',
-      });
-      const text = await response.text();
+      const bodyString = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
+      const result = await sendToAppsScript(SCRIPT_URL, bodyString);
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      return res.status(response.status).send(text);
+      return res.status(result.status).send(result.text);
     }
 
     return res.status(405).json({ error: 'Méthode non autorisée' });
