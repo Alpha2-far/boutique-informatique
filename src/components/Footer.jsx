@@ -10,7 +10,7 @@ export default function Footer() {
           <div>
             <Link to="/" className="flex items-center mb-4">
               <img 
-                src="https://res.cloudinary.com/dpknc20k0/image/upload/f_auto,q_auto/gco-store-logo" 
+                src="/assets/logo.png" 
                 alt="GQ-Store Logo" 
                 className="h-10 w-auto brightness-0 invert"
               />

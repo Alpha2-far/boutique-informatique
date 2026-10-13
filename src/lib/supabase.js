@@ -1,217 +1,289 @@
-import { createClient } from '@supabase/supabase-js'
+/**
+ * Client de données GQ Store
+ * Connecté à Google Apps Script / Google Sheets
+ * Remplace Supabase de façon transparente en conservant les mêmes signatures de fonctions.
+ */
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+const DIRECT_URL = import.meta.env.VITE_APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbzquOsnzDkC8hP-EL2ARuuIPgjADUvByaji4mNcAYCFrvt9bUVkQ6n6vyUHUGRLZfni3A/exec'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Sur Vercel (ou tout domaine distant hors localhost), utiliser le proxy /api/apps-script
+// afin d'éliminer définitivement les erreurs CORS et les redirections 302 ("Failed to fetch")
+function getApiUrl() {
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return '/api/apps-script'
+  }
+  return DIRECT_URL
+}
 
-// ─── Auth helpers ───────────────────────────────────────────
+// ─── Helpers Requêtes HTTP avec Retry ──────────────────────────
+async function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function apiGet(action, params = {}, retries = 2) {
+  const baseUrl = getApiUrl()
+  const urlParams = new URLSearchParams({ action, ...params })
+  
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(`${baseUrl}?${urlParams.toString()}`, {
+        method: 'GET',
+        redirect: 'follow',
+      })
+      if (!response.ok) {
+        throw new Error(`Erreur réseau (${response.status})`)
+      }
+      const text = await response.text()
+      if (!text.trim().startsWith('{')) {
+        throw new Error('Réponse non JSON de Google Apps Script')
+      }
+      const result = JSON.parse(text)
+      if (result.success === false) {
+        throw new Error(result.error || 'Erreur lors de la récupération des données')
+      }
+      return result.data !== undefined ? result.data : result
+    } catch (err) {
+      if (attempt < retries) {
+        await wait(500 * (attempt + 1))
+        continue
+      }
+      throw err
+    }
+  }
+}
+
+async function apiPost(action, payload = {}, retries = 2) {
+  const baseUrl = getApiUrl()
+  const body = JSON.stringify({ action, ...payload })
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const isProxy = baseUrl.startsWith('/api')
+      const response = await fetch(baseUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': isProxy ? 'application/json' : 'text/plain;charset=utf-8',
+        },
+        body,
+        redirect: 'follow',
+      })
+      if (!response.ok) {
+        throw new Error(`Erreur réseau (${response.status})`)
+      }
+      const text = await response.text()
+      if (!text.trim().startsWith('{')) {
+        throw new Error('Réponse non JSON de Google Apps Script')
+      }
+      const result = JSON.parse(text)
+      if (result.success === false) {
+        throw new Error(result.error || 'Erreur lors de l’enregistrement')
+      }
+      return result.data !== undefined ? result.data : result
+    } catch (err) {
+      if (attempt < retries) {
+        await wait(500 * (attempt + 1))
+        continue
+      }
+      throw err
+    }
+  }
+}
+
+// ─── Gestion de Session et Auth Admin ──────────────────────────
+const SESSION_KEY = 'gq_store_admin_session'
+const authSubscribers = new Set()
+
+function notifyAuthSubscribers(session) {
+  authSubscribers.forEach((callback) => {
+    try {
+      callback(session ? 'SIGNED_IN' : 'SIGNED_OUT', session)
+    } catch (e) {
+      console.error(e)
+    }
+  })
+}
+
 export async function signIn(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) throw error
-  return data
+  const result = await apiPost('login', { email, password })
+  const session = {
+    user: result.user,
+    token: result.token,
+    expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000,
+  }
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  notifyAuthSubscribers(session)
+  return { user: session.user, session }
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  if (error) throw error
+  localStorage.removeItem(SESSION_KEY)
+  notifyAuthSubscribers(null)
+  return { error: null }
 }
 
 export async function getSession() {
-  const { data: { session } } = await supabase.auth.getSession()
-  return session
+  const raw = localStorage.getItem(SESSION_KEY)
+  if (!raw) return null
+  try {
+    const session = JSON.parse(raw)
+    if (session.expires_at && session.expires_at < Date.now()) {
+      localStorage.removeItem(SESSION_KEY)
+      notifyAuthSubscribers(null)
+      return null
+    }
+    return session
+  } catch {
+    return null
+  }
 }
 
-// ─── Categories ─────────────────────────────────────────────
+// ─── Émulateur Supabase (pour compatibilité avec AdminLayout et ProductForm) ─
+export const supabase = {
+  auth: {
+    async getSession() {
+      const session = await getSession()
+      return { data: { session }, error: null }
+    },
+    onAuthStateChange(callback) {
+      authSubscribers.add(callback)
+      return {
+        data: {
+          subscription: {
+            unsubscribe: () => authSubscribers.delete(callback),
+          },
+        },
+      }
+    },
+    signInWithPassword({ email, password }) {
+      return signIn(email, password)
+    },
+    signOut() {
+      return signOut()
+    },
+  },
+  from(tableName) {
+    return {
+      select(fields = '*') {
+        return {
+          eq(field, val) {
+            return {
+              async single() {
+                if (tableName === 'products' && field === 'id') {
+                  const data = await apiGet('get_product_by_id', { id: val })
+                  return { data, error: null }
+                }
+                if (tableName === 'products' && field === 'slug') {
+                  const data = await apiGet('get_product_by_slug', { slug: val })
+                  return { data, error: null }
+                }
+                return { data: null, error: new Error('Non trouvé') }
+              },
+              neq(notField, notVal) {
+                return {
+                  async maybeSingle() {
+                    if (tableName === 'products' && field === 'slug') {
+                      const res = await apiGet('check_slug', { slug: val, current_id: notVal })
+                      return { data: res.available ? null : { id: 'exists' }, error: null }
+                    }
+                    return { data: null, error: null }
+                  },
+                }
+              },
+              async maybeSingle() {
+                if (tableName === 'products' && field === 'slug') {
+                  const res = await apiGet('check_slug', { slug: val })
+                  return { data: res.available ? null : { id: 'exists' }, error: null }
+                }
+                return { data: null, error: null }
+              },
+            }
+          },
+        }
+      },
+    }
+  },
+}
+
+// ─── Catégories ─────────────────────────────────────────────
 export async function fetchCategories() {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .order('ordre', { ascending: true })
-  if (error) throw error
-  return data
+  return await apiGet('get_categories')
 }
 
 export async function upsertCategory(category) {
-  const { data, error } = await supabase
-    .from('categories')
-    .upsert(category)
-    .select()
-    .single()
-  if (error) throw error
-  return data
+  return await apiPost('upsert_category', { category })
 }
 
 export async function deleteCategory(id) {
-  const { error } = await supabase.from('categories').delete().eq('id', id)
-  if (error) throw error
+  return await apiPost('delete_category', { id })
 }
 
-// ─── Products ───────────────────────────────────────────────
+// ─── Produits ───────────────────────────────────────────────
 export async function fetchProducts(filters = {}) {
-  let query = supabase
-    .from('products')
-    .select(`
-      *,
-      categories ( id, nom, slug ),
-      product_images ( id, cloudinary_url, cloudinary_public_id, est_principale, ordre ),
-      product_specs ( id, icone, libelle, valeur, ordre )
-    `)
-    .eq('actif', true)
-    .order('created_at', { ascending: false })
+  const params = {}
+  if (filters.categorie_id) params.categorie_id = filters.categorie_id
+  if (filters.etat && filters.etat !== 'tous') params.etat = filters.etat
+  if (filters.en_vedette) params.en_vedette = 'true'
+  if (filters.search) params.search = filters.search
 
-  if (filters.categorie_id) {
-    query = query.eq('categorie_id', filters.categorie_id)
-  }
-  if (filters.etat && filters.etat !== 'tous') {
-    query = query.eq('etat', filters.etat)
-  }
-  if (filters.en_vedette) {
-    query = query.eq('en_vedette', true)
-  }
-  if (filters.search) {
-    query = query.ilike('nom', `%${filters.search}%`)
-  }
-
-  const { data, error } = await query
-  if (error) throw error
-  return data
+  return await apiGet('get_products', params)
 }
 
 export async function fetchAllProducts() {
-  const { data, error } = await supabase
-    .from('products')
-    .select(`
-      *,
-      categories ( id, nom, slug ),
-      product_images ( id, cloudinary_url, cloudinary_public_id, est_principale, ordre ),
-      product_specs ( id, icone, libelle, valeur, ordre )
-    `)
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return data
+  return await apiGet('get_all_products')
 }
 
 export async function fetchProductBySlug(slug) {
-  const { data, error } = await supabase
-    .from('products')
-    .select(`
-      *,
-      categories ( id, nom, slug ),
-      product_images ( id, cloudinary_url, cloudinary_public_id, est_principale, ordre ),
-      product_specs ( id, icone, libelle, valeur, ordre )
-    `)
-    .eq('slug', slug)
-    .single()
-  if (error) throw error
-  return data
+  return await apiGet('get_product_by_slug', { slug })
 }
 
 export async function fetchSimilarProducts(categorieId, excludeId, limit = 4) {
-  const { data, error } = await supabase
-    .from('products')
-    .select(`
-      *,
-      categories ( id, nom, slug ),
-      product_images ( id, cloudinary_url, cloudinary_public_id, est_principale, ordre ),
-      product_specs ( id, icone, libelle, valeur, ordre )
-    `)
-    .eq('categorie_id', categorieId)
-    .neq('id', excludeId)
-    .eq('actif', true)
-    .limit(limit)
-  if (error) throw error
-  return data
+  return await apiGet('get_similar_products', {
+    categorie_id: categorieId,
+    exclude_id: excludeId,
+    limit: String(limit),
+  })
 }
 
 export async function upsertProduct(product) {
-  const { data, error } = await supabase
-    .from('products')
-    .upsert(product)
-    .select()
-    .single()
-  if (error) throw error
-  return data
+  return await apiPost('upsert_product', { product })
 }
 
 export async function toggleProductActive(id, actif) {
-  const { error } = await supabase
-    .from('products')
-    .update({ actif })
-    .eq('id', id)
-  if (error) throw error
+  return await apiPost('toggle_product_active', { id, actif })
 }
 
 export async function deleteProduct(id) {
-  const { error } = await supabase.from('products').delete().eq('id', id)
-  if (error) throw error
+  return await apiPost('delete_product', { id })
 }
 
-// ─── Product Images ─────────────────────────────────────────
+// ─── Images de Produits ─────────────────────────────────────
 export async function saveProductImages(productId, images) {
-  // Delete existing images
-  await supabase.from('product_images').delete().eq('product_id', productId)
-
-  if (images.length === 0) return
-
-  const rows = images.map((img, i) => ({
+  return await apiPost('save_product_images', {
     product_id: productId,
-    cloudinary_url: img.cloudinary_url,
-    cloudinary_public_id: img.cloudinary_public_id,
-    est_principale: img.est_principale || false,
-    ordre: i,
-  }))
-
-  const { error } = await supabase.from('product_images').insert(rows)
-  if (error) throw error
+    images: images || [],
+  })
 }
 
-// ─── Product Specs ──────────────────────────────────────────
+// ─── Spécifications de Produits ─────────────────────────────
 export async function saveProductSpecs(productId, specs) {
-  await supabase.from('product_specs').delete().eq('product_id', productId)
-
-  if (specs.length === 0) return
-
-  const rows = specs.map((s, i) => ({
+  return await apiPost('save_product_specs', {
     product_id: productId,
-    icone: s.icone || '',
-    libelle: s.libelle,
-    valeur: s.valeur,
-    ordre: i,
-  }))
-
-  const { error } = await supabase.from('product_specs').insert(rows)
-  if (error) throw error
+    specs: specs || [],
+  })
 }
 
-// ─── Product Reviews ────────────────────────────────────────
+// ─── Avis Clients (Reviews) ─────────────────────────────────
 export async function fetchProductReviews(productId) {
-  const { data, error } = await supabase
-    .from('product_reviews')
-    .select('*')
-    .eq('product_id', productId)
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return data
+  return await apiGet('get_reviews', { product_id: productId })
 }
 
 export async function addProductReview(review) {
-  const { data, error } = await supabase
-    .from('product_reviews')
-    .insert(review)
-    .select()
-    .single()
-  if (error) throw error
-  return data
+  return await apiPost('add_review', { review })
 }
 
 export async function getProductRating(productId) {
-  const { data, error } = await supabase
-    .from('product_reviews')
-    .select('rating')
-    .eq('product_id', productId)
-  if (error) throw error
-  if (data.length === 0) return { average: 0, count: 0 }
-  const average = data.reduce((sum, r) => sum + r.rating, 0) / data.length
-  return { average: Math.round(average * 10) / 10, count: data.length }
+  const reviews = await fetchProductReviews(productId)
+  if (!reviews || reviews.length === 0) return { average: 0, count: 0 }
+  const average = reviews.reduce((sum, r) => sum + (parseFloat(r.rating) || 0), 0) / reviews.length
+  return { average: Math.round(average * 10) / 10, count: reviews.length }
 }
