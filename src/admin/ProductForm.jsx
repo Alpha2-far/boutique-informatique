@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Save, ArrowLeft, Upload, X, Star, ChevronUp, ChevronDown, Plus, Trash2, Image as ImageIcon, Sparkles, Wand2 } from 'lucide-react'
-import { fetchCategories, upsertProduct, saveProductImages, saveProductSpecs, supabase } from '../lib/supabase'
+import { Save, ArrowLeft, Upload, X, Star, ChevronUp, ChevronDown, Plus, Trash2, Image as ImageIcon, Sparkles, Wand2, Loader2 } from 'lucide-react'
+import { fetchCategories, saveProductFull, supabase } from '../lib/supabase'
 import { uploadToCloudinary, getOptimizedUrl } from '../lib/cloudinary'
 import { parseRawProductText, getSpecIcon } from '../lib/productParser'
 import SpecIcon from '../components/SpecIcon'
@@ -11,26 +11,6 @@ function generateSlug(text) {
     .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
-async function generateUniqueSlug(text, currentProductId = null) {
-  const baseSlug = generateSlug(text)
-  let slug = baseSlug
-  let suffix = 2
-
-  while (true) {
-    let query = supabase.from('products').select('id').eq('slug', slug)
-    // Si on édite un produit, on exclut le produit actuel de la vérification
-    if (currentProductId) {
-      query = query.neq('id', currentProductId)
-    }
-    const { data } = await query.maybeSingle()
-    if (!data) break // slug disponible
-    slug = `${baseSlug}-${suffix}`
-    suffix++
-  }
-
-  return slug
-}
-
 export default function ProductForm() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -38,7 +18,9 @@ export default function ProductForm() {
 
   const [categories, setCategories] = useState([])
   const [saving, setSaving] = useState(false)
+  const [savingStatus, setSavingStatus] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(null)
   const [rawText, setRawText] = useState('')
   const [parserFeedback, setParserFeedback] = useState(null)
   const [form, setForm] = useState({
@@ -79,16 +61,26 @@ export default function ProductForm() {
     const files = Array.from(e.target.files)
     if (!files.length) return
     setUploading(true)
+    setUploadProgress(`Compression & envoi (${files.length} photo${files.length > 1 ? 's' : ''})...`)
     try {
-      for (const file of files) {
-        const { url, public_id } = await uploadToCloudinary(file)
-        setImages(prev => [...prev, {
-          cloudinary_url: url, cloudinary_public_id: public_id,
-          est_principale: prev.length === 0,
-        }])
-      }
-    } catch (err) { alert('Erreur upload: ' + err.message) }
-    finally { setUploading(false) }
+      // Compression Canvas et upload simultané ultra-rapide
+      const results = await Promise.all(
+        files.map(async (file) => uploadToCloudinary(file))
+      )
+      setImages(prev => [
+        ...prev,
+        ...results.map((res, idx) => ({
+          cloudinary_url: res.url,
+          cloudinary_public_id: res.public_id,
+          est_principale: prev.length === 0 && idx === 0,
+        }))
+      ])
+    } catch (err) {
+      alert('Erreur upload: ' + err.message)
+    } finally {
+      setUploading(false)
+      setUploadProgress(null)
+    }
   }
 
   const setMainImage = (idx) => {
@@ -153,23 +145,36 @@ export default function ProductForm() {
     e.preventDefault()
     if (!form.nom.trim() || !form.prix) return
     setSaving(true)
+    setSavingStatus('Enregistrement rapide...')
     try {
-      const uniqueSlug = await generateUniqueSlug(form.nom, isEdit ? id : null)
+      const slug = generateSlug(form.nom)
+      const validSpecs = specs.filter(s => s.libelle.trim() && s.valeur.trim())
       const productData = {
-        nom: form.nom.trim(), slug: uniqueSlug,
+        nom: form.nom.trim(),
+        slug,
         description: form.description.trim() || null,
-        prix: parseFloat(form.prix), categorie_id: form.categorie_id || null,
+        prix: parseFloat(form.prix),
+        categorie_id: form.categorie_id || null,
         etat: form.etat,
-        en_vedette: form.en_vedette, actif: form.actif,
+        en_vedette: form.en_vedette,
+        actif: form.actif,
       }
       if (isEdit) productData.id = id
-      const product = await upsertProduct(productData)
-      await saveProductImages(product.id, images)
-      const validSpecs = specs.filter(s => s.libelle.trim() && s.valeur.trim())
-      await saveProductSpecs(product.id, validSpecs)
+
+      setSavingStatus('Sauvegarde du produit et des caractéristiques...')
+      await saveProductFull({
+        product: productData,
+        images,
+        specs: validSpecs,
+        isEdit,
+      })
       navigate('/admin/produits')
-    } catch (err) { alert('Erreur: ' + err.message) }
-    finally { setSaving(false) }
+    } catch (err) {
+      alert('Erreur: ' + err.message)
+    } finally {
+      setSaving(false)
+      setSavingStatus(null)
+    }
   }
 
   return (
@@ -325,9 +330,22 @@ export default function ProductForm() {
         {/* Images */}
         <div className="bg-white rounded-xl border border-border p-6">
           <h3 className="font-semibold text-text-primary mb-4">Images</h3>
-          <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-8 cursor-pointer hover:border-primary-700 hover:bg-primary-50/30 transition-all mb-4">
-            <Upload size={24} className="text-text-light mb-2" />
-            <span className="text-sm text-text-muted">{uploading ? 'Upload en cours...' : 'Cliquer ou déposer des images'}</span>
+          <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 transition-all mb-4 ${
+            uploading
+              ? 'border-purple-300 bg-purple-50/50 cursor-wait'
+              : 'border-border cursor-pointer hover:border-primary-700 hover:bg-primary-50/30'
+          }`}>
+            {uploading ? (
+              <Loader2 size={24} className="text-[#4A0D8F] animate-spin mb-2" />
+            ) : (
+              <Upload size={24} className="text-text-light mb-2" />
+            )}
+            <span className="text-sm font-medium text-text-primary">
+              {uploading ? (uploadProgress || 'Compression et envoi des images...') : 'Cliquer ou déposer des images'}
+            </span>
+            <span className="text-xs text-text-muted mt-1">
+              Photos compressées automatiquement en ultra-haute qualité
+            </span>
             <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" disabled={uploading} />
           </label>
           {images.length > 0 && (
@@ -403,11 +421,35 @@ export default function ProductForm() {
         </div>
 
         {/* Submit */}
-        <div className="flex justify-end gap-3">
-          <button type="button" onClick={() => navigate('/admin/produits')} className="btn-secondary">Annuler</button>
-          <button type="submit" disabled={saving} className="btn-primary">
-            <Save size={16} /> {saving ? 'Enregistrement...' : 'Enregistrer'}
-          </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+          {savingStatus ? (
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-[#4A0D8F] bg-purple-50 border border-purple-200 px-3.5 py-2 rounded-xl">
+              <Loader2 size={16} className="animate-spin text-[#4A0D8F] shrink-0" />
+              <span>{savingStatus}</span>
+            </div>
+          ) : <div />}
+          <div className="flex justify-end gap-3">
+            <button type="button" onClick={() => navigate('/admin/produits')} className="btn-secondary" disabled={saving}>
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={saving || uploading}
+              className="btn-primary flex items-center justify-center gap-2 min-w-[170px]"
+            >
+              {saving ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Enregistrement...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={16} />
+                  <span>{isEdit ? 'Mettre à jour' : 'Enregistrer le produit'}</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>

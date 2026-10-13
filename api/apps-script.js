@@ -64,6 +64,50 @@ export default async function handler(req, res) {
         }
       }
 
+      // Enregistrement atomique ultra-rapide d'un produit (produit + images + specs)
+      if (data && data.action === 'save_product_full') {
+        let result = await sendToAppsScript(SCRIPT_URL, data);
+        let parsed = null;
+        try {
+          parsed = JSON.parse(result.text);
+        } catch {}
+
+        // Si le script distant supporte save_product_full en direct
+        if (parsed && parsed.success) {
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          return res.status(result.status).send(result.text);
+        }
+
+        // Si le script distant n'a pas encore été mis à jour, orchestration parallèle côté Vercel
+        if (!parsed || (!parsed.success && parsed.error && parsed.error.includes('inconnue'))) {
+          const { product, images, specs } = data;
+          const prodRes = await sendToAppsScript(SCRIPT_URL, { action: 'upsert_product', product });
+          const prodParsed = JSON.parse(prodRes.text);
+          if (!prodParsed.success) {
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            return res.status(prodRes.status).send(prodRes.text);
+          }
+          const savedProduct = prodParsed.data;
+
+          // Sauvegarde concurrente des images et des caractéristiques
+          await Promise.all([
+            images ? sendToAppsScript(SCRIPT_URL, {
+              action: 'save_product_images',
+              product_id: savedProduct.id,
+              images: images || [],
+            }) : Promise.resolve(),
+            specs ? sendToAppsScript(SCRIPT_URL, {
+              action: 'save_product_specs',
+              product_id: savedProduct.id,
+              specs: specs || [],
+            }) : Promise.resolve(),
+          ]);
+
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          return res.status(200).send(JSON.stringify({ success: true, data: savedProduct }));
+        }
+      }
+
       const bodyString = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
       const result = await sendToAppsScript(SCRIPT_URL, bodyString);
       res.setHeader('Content-Type', 'application/json; charset=utf-8');

@@ -149,6 +149,10 @@ function doPost(e) {
         result = saveProductSpecs(data.product_id, data.specs);
         break;
 
+      case 'save_product_full':
+        result = saveProductFull(data);
+        break;
+
       case 'add_review':
         result = addProductReview(data.review);
         break;
@@ -478,25 +482,45 @@ function deleteProduct(id) {
 
 function deleteRowsByProductId(sheetName, productId) {
   const sheet = getSheet(sheetName);
-  const rows = getRowsAsObjects(sheetName);
-  const matching = rows.filter(r => r.product_id === productId);
-  // Supprimer de bas en haut pour préserver les numéros de ligne
-  matching.reverse().forEach(r => {
-    sheet.deleteRow(r._rowIndex);
-  });
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return;
+
+  const headers = data[0].map(h => String(h).trim());
+  const prodIdIdx = headers.indexOf('product_id');
+  if (prodIdIdx === -1) return;
+
+  const preservedRows = [data[0]]; // En-têtes
+  let found = false;
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][prodIdIdx] === productId) {
+      found = true;
+    } else {
+      preservedRows.push(data[i]);
+    }
+  }
+
+  // Si des lignes ont été supprimées, réécrire en 1 seule opération atomique
+  if (found) {
+    sheet.clearContents();
+    sheet.getRange(1, 1, preservedRows.length, headers.length).setValues(preservedRows);
+  }
 }
 
-function saveProductImages(productId, images) {
-  // Supprimer les images actuelles pour ce produit
-  deleteRowsByProductId('product_images', productId);
+function saveProductImages(productId, images, skipDelete) {
+  // Supprimer les images actuelles pour ce produit sauf si nouveau produit
+  if (!skipDelete) {
+    deleteRowsByProductId('product_images', productId);
+  }
 
   if (!images || images.length === 0) return { success: true };
 
   const sheet = getSheet('product_images');
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
 
-  images.forEach((img, i) => {
-    const rowValues = headers.map(h => {
+  // Préparation de toutes les lignes en mémoire
+  const rows = images.map((img, i) => {
+    return headers.map(h => {
       if (h === 'id') return Utilities.getUuid();
       if (h === 'product_id') return productId;
       if (h === 'cloudinary_url' || h === 'image_url') return img.cloudinary_url || img.image_url || '';
@@ -505,22 +529,28 @@ function saveProductImages(productId, images) {
       if (h === 'ordre') return i;
       return '';
     });
-    sheet.appendRow(rowValues);
   });
+
+  // Écriture groupée ultra-rapide en 1 seul appel Sheets
+  const lastRow = sheet.getLastRow();
+  sheet.getRange(lastRow + 1, 1, rows.length, headers.length).setValues(rows);
 
   return { success: true };
 }
 
-function saveProductSpecs(productId, specs) {
-  deleteRowsByProductId('product_specs', productId);
+function saveProductSpecs(productId, specs, skipDelete) {
+  if (!skipDelete) {
+    deleteRowsByProductId('product_specs', productId);
+  }
 
   if (!specs || specs.length === 0) return { success: true };
 
   const sheet = getSheet('product_specs');
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
 
-  specs.forEach((s, i) => {
-    const rowValues = headers.map(h => {
+  // Préparation de toutes les lignes de specs en mémoire
+  const rows = specs.map((s, i) => {
+    return headers.map(h => {
       if (h === 'id') return Utilities.getUuid();
       if (h === 'product_id') return productId;
       if (h === 'icone') return s.icone || '';
@@ -529,10 +559,34 @@ function saveProductSpecs(productId, specs) {
       if (h === 'ordre') return i;
       return '';
     });
-    sheet.appendRow(rowValues);
   });
 
+  // Écriture groupée ultra-rapide en 1 seul appel Sheets
+  const lastRow = sheet.getLastRow();
+  sheet.getRange(lastRow + 1, 1, rows.length, headers.length).setValues(rows);
+
   return { success: true };
+}
+
+function saveProductFull(payload) {
+  const product = payload.product;
+  const images = payload.images || [];
+  const specs = payload.specs || [];
+  const isEdit = Boolean(payload.isEdit || product.id);
+
+  // 1. Sauvegarder le produit
+  const upsertRes = upsertProduct(product);
+  if (!upsertRes.success) return upsertRes;
+  const savedProduct = upsertRes.data;
+  const productId = savedProduct.id;
+
+  // 2. Sauvegarder les images en batch (sans suppression inutile si nouveau produit)
+  saveProductImages(productId, images, !isEdit);
+
+  // 3. Sauvegarder les caractéristiques en batch (sans suppression inutile si nouveau produit)
+  saveProductSpecs(productId, specs, !isEdit);
+
+  return { success: true, data: savedProduct };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -272,6 +272,16 @@ export async function saveProductSpecs(productId, specs) {
   })
 }
 
+// ─── Sauvegarde Complète Atomique (Ultra Rapide) ─────────────
+export async function saveProductFull({ product, images, specs, isEdit }) {
+  return await apiPost('save_product_full', {
+    product,
+    images: images || [],
+    specs: specs || [],
+    isEdit: Boolean(isEdit),
+  })
+}
+
 // ─── Avis Clients (Reviews) ─────────────────────────────────
 export async function fetchProductReviews(productId) {
   return await apiGet('get_reviews', { product_id: productId })

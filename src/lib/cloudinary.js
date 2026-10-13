@@ -27,6 +27,71 @@ function fileToBase64(file) {
 }
 
 /**
+ * Compresse une image côté client via HTML5 Canvas avant envoi.
+ * Réduit la taille d'une photo de 8 Mo à ~250 Ko en quelques millisecondes,
+ * ce qui accélère l'envoi et évite les limites de requêtes Vercel / Google Drive.
+ * @param {File} file
+ * @param {number} maxWidth
+ * @param {number} quality
+ * @returns {Promise<File>}
+ */
+export async function compressImage(file, maxWidth = 1600, quality = 0.82) {
+  if (!file || !file.type || !file.type.startsWith('image/') || file.type === 'image/gif') {
+    return file
+  }
+
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        let { width, height } = img
+
+        if (width > maxWidth || height > maxWidth) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width)
+            width = maxWidth
+          } else {
+            width = Math.round((width * maxWidth) / height)
+            height = maxWidth
+          }
+        }
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        if (file.type !== 'image/png') {
+          ctx.fillStyle = '#FFFFFF'
+          ctx.fillRect(0, 0, width, height)
+        }
+        ctx.drawImage(img, 0, 0, width, height)
+
+        const outputType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.size < file.size) {
+              const ext = outputType === 'image/png' ? '.png' : '.jpg'
+              const name = file.name.replace(/\.[^.]+$/, '') + ext
+              resolve(new File([blob], name, { type: outputType, lastModified: Date.now() }))
+            } else {
+              resolve(file)
+            }
+          },
+          outputType,
+          quality
+        )
+      }
+      img.onerror = () => resolve(file)
+      img.src = e.target.result
+    }
+    reader.onerror = () => resolve(file)
+    reader.readAsDataURL(file)
+  })
+}
+
+/**
  * Upload a file to Google Drive via Google Apps Script (remplace Cloudinary)
  * @param {File} file - The file to upload
  * @returns {Promise<{url: string, public_id: string}>}
@@ -35,12 +100,14 @@ export async function uploadToCloudinary(file) {
   const baseUrl = getApiUrl()
   const isProxy = baseUrl.startsWith('/api')
 
-  const base64Data = await fileToBase64(file)
+  // Compression automatique ultra-rapide côté client
+  const processedFile = await compressImage(file)
+  const base64Data = await fileToBase64(processedFile)
 
   const payload = {
     action: 'upload_image',
-    fileName: file.name,
-    mimeType: file.type,
+    fileName: processedFile.name,
+    mimeType: processedFile.type,
     base64: base64Data,
   }
 
