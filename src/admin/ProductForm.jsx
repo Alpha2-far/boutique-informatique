@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Save, ArrowLeft, Upload, X, Star, ChevronUp, ChevronDown, Plus, Trash2, Image as ImageIcon } from 'lucide-react'
+import { Save, ArrowLeft, Upload, X, Star, ChevronUp, ChevronDown, Plus, Trash2, Image as ImageIcon, Sparkles, Wand2 } from 'lucide-react'
 import { fetchCategories, upsertProduct, saveProductImages, saveProductSpecs, supabase } from '../lib/supabase'
 import { uploadToCloudinary, getOptimizedUrl } from '../lib/cloudinary'
+import { parseRawProductText } from '../lib/productParser'
 
 function generateSlug(text) {
   return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -37,6 +38,8 @@ export default function ProductForm() {
   const [categories, setCategories] = useState([])
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [rawText, setRawText] = useState('')
+  const [parserFeedback, setParserFeedback] = useState(null)
   const [form, setForm] = useState({
     nom: '', description: '', prix: '', categorie_id: '',
     etat: 'neuf', en_vedette: false, actif: true,
@@ -117,6 +120,27 @@ export default function ProductForm() {
     setSpecs(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s))
   }
 
+  const handleMagicParse = () => {
+    if (!rawText.trim()) return
+    const parsed = parseRawProductText(rawText, categories)
+    if (!parsed) return
+
+    setForm(prev => ({
+      ...prev,
+      nom: parsed.nom || prev.nom,
+      prix: parsed.prix ? String(parsed.prix) : prev.prix,
+      etat: parsed.etat || prev.etat,
+      categorie_id: parsed.categorie_id || prev.categorie_id,
+      description: parsed.description || prev.description,
+    }))
+
+    if (parsed.specs && parsed.specs.length > 0) {
+      setSpecs(parsed.specs)
+    }
+
+    setParserFeedback(`✨ ${parsed.specs?.length || 0} caractéristiques et informations pré-remplies !`)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.nom.trim() || !form.prix) return
@@ -154,6 +178,61 @@ export default function ProductForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Remplissage Rapide WhatsApp (Nouveau) */}
+        {!isEdit && (
+          <div className="bg-gradient-to-br from-[#2D0660]/10 via-[#4A0D8F]/10 to-indigo-50 border border-purple-200 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#2D0660] to-[#4A0D8F] flex items-center justify-center text-white shadow-md">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-text-primary text-sm sm:text-base">
+                    Remplissage Rapide WhatsApp
+                  </h3>
+                  <p className="text-xs text-text-muted">
+                    Collez votre annonce brute (nom, specs, état...) et cliquez pour remplir automatiquement tout le formulaire.
+                  </p>
+                </div>
+              </div>
+              {rawText && (
+                <button
+                  type="button"
+                  onClick={() => { setRawText(''); setParserFeedback(null) }}
+                  className="text-xs text-text-muted hover:text-red-600 transition-colors"
+                >
+                  Effacer
+                </button>
+              )}
+            </div>
+
+            <textarea
+              value={rawText}
+              onChange={(e) => setRawText(e.target.value)}
+              placeholder="Collez ici votre texte WhatsApp...&#10;Exemple :&#10;💻 *HP Laptop 15-eg0xxx*&#10;✅*Processeur : Intel Pentium Gold 7505*&#10;Mémoire : RAM 4 Go&#10;✅*Stockage : SSD 128 Go*&#10;État : Venu propre, 10/10..."
+              className="w-full h-28 p-3 text-xs sm:text-sm bg-white rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-[#4A0D8F] transition-all placeholder:text-gray-400 font-mono resize-y mt-2"
+            />
+
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
+              <button
+                type="button"
+                onClick={handleMagicParse}
+                disabled={!rawText.trim()}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#2D0660] to-[#4A0D8F] hover:from-[#1A0533] hover:to-[#38096C] text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Wand2 size={16} />
+                Analyser & Remplir automatiquement
+              </button>
+
+              {parserFeedback && (
+                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                  {parserFeedback}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Basic Info */}
         <div className="bg-white rounded-xl border border-border p-6">
           <h3 className="font-semibold text-text-primary mb-4">Informations générales</h3>
