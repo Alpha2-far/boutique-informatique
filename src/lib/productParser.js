@@ -262,15 +262,54 @@ export function parseRawProductText(rawText, availableCategories = []) {
       });
       continue;
     }
-
-    // Autres lignes descriptives
-    descriptionParts.push(line);
   }
 
-  // Création d'une description propre
-  const description = descriptionParts.length > 0
-    ? descriptionParts.join('\n')
-    : `Excellent ${nom}, fiable, performant et vérifié par GQ Store.`;
+  // Création d'une vraie description commerciale et fluide pour la boutique
+  function buildSmartDescription(pNom, pRawText, pSpecs, pEtat) {
+    const parts = [];
+    const cpu = pSpecs.find(s => s.libelle === 'Processeur')?.valeur;
+    const ram = pSpecs.find(s => s.libelle === 'RAM')?.valeur;
+    const storage = pSpecs.find(s => s.libelle === 'Stockage')?.valeur;
+    const screen = pSpecs.find(s => s.libelle === 'Écran')?.valeur;
+    const battery = pSpecs.find(s => s.libelle === 'Autonomie')?.valeur;
+    const format = pSpecs.find(s => s.libelle === 'Format' || s.libelle === 'Clavier')?.valeur;
+
+    let intro = `Le ${pNom} est un ordinateur portable moderne, fluide et performant.`;
+    if (screen) {
+      intro += ` Il dispose d'un écran de ${screen},`;
+    }
+    if (cpu) {
+      intro += ` propulsé par un processeur ${cpu}`;
+    }
+    if (ram && storage) {
+      intro += ` combiné à ${ram} et un stockage ultra-rapide ${storage}.`;
+    } else if (storage) {
+      intro += ` avec un stockage ${storage}.`;
+    } else {
+      intro += '.';
+    }
+    parts.push(intro);
+
+    const lower = pRawText.toLowerCase();
+    if (lower.includes('venu propre') || lower.includes('10/10') || lower.includes('sans égratignure') || lower.includes('sans egratignure')) {
+      parts.push("Appareil venu propre, état 10/10 sans égratignure, soigneusement inspecté et testé.");
+    } else if (pEtat === 'neuf') {
+      parts.push("Produit neuf sous emballage d'origine garanti.");
+    }
+
+    const extras = [];
+    if (format) extras.push(`clavier avec ${format.toLowerCase()}`);
+    if (battery) extras.push(`excellente autonomie pour travailler en toute sérénité`);
+    if (extras.length > 0) {
+      parts.push(`Profitez d'un confort de frappe et d'utilisation optimal avec ${extras.join(' et ')}.`);
+    }
+
+    parts.push("Idéal pour le travail bureautique intensif, les études, la gestion et le divertissement multimédia. Disponible chez GQ Store.");
+
+    return parts.join(' ');
+  }
+
+  const description = buildSmartDescription(nom, rawText, specs, etat);
 
   return {
     nom,

@@ -14,6 +14,7 @@ import { getOptimizedUrl } from '../lib/cloudinary'
 import { formatEtat, getEtatBadgeClass } from '../lib/utils'
 import ProductCard, { formatPrice, getMainImage } from '../components/ProductCard'
 import Reviews from '../components/Reviews'
+import SpecIcon from '../components/SpecIcon'
 import { useCartStore } from '../store/cartStore'
 
 export default function ProductDetail() {
@@ -321,10 +322,8 @@ export default function ProductDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {specs.map((spec) => (
                 <div key={spec.id} className="spec-cell">
-                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shrink-0 border border-border">
-                    <span className="text-primary-700 text-sm font-bold">
-                      {spec.icone || spec.libelle?.charAt(0)}
-                    </span>
+                  <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center shrink-0 border border-primary-100">
+                    <SpecIcon iconName={spec.icone} libelle={spec.libelle} size={20} className="text-primary-700" />
                   </div>
                   <div>
                     <p className="text-xs text-text-muted">{spec.libelle}</p>

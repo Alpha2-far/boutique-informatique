@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Save, ArrowLeft, Upload, X, Star, ChevronUp, ChevronDown, Plus, Trash2, Image as ImageIcon, Sparkles, Wand2 } from 'lucide-react'
 import { fetchCategories, upsertProduct, saveProductImages, saveProductSpecs, supabase } from '../lib/supabase'
 import { uploadToCloudinary, getOptimizedUrl } from '../lib/cloudinary'
-import { parseRawProductText } from '../lib/productParser'
+import { parseRawProductText, getSpecIcon } from '../lib/productParser'
+import SpecIcon from '../components/SpecIcon'
 
 function generateSlug(text) {
   return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -114,10 +115,17 @@ export default function ProductForm() {
     })
   }
 
-  const addSpec = () => setSpecs(prev => [...prev, { icone: '', libelle: '', valeur: '' }])
+  const addSpec = () => setSpecs(prev => [...prev, { icone: 'Check', libelle: '', valeur: '' }])
   const removeSpec = (idx) => setSpecs(prev => prev.filter((_, i) => i !== idx))
   const updateSpec = (idx, field, value) => {
-    setSpecs(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s))
+    setSpecs(prev => prev.map((s, i) => {
+      if (i !== idx) return s
+      const updated = { ...s, [field]: value }
+      if (field === 'libelle' && value) {
+        updated.icone = getSpecIcon(value)
+      }
+      return updated
+    }))
   }
 
   const handleMagicParse = () => {
@@ -334,21 +342,46 @@ export default function ProductForm() {
         {/* Specs */}
         <div className="bg-white rounded-xl border border-border p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-text-primary">Spécifications techniques</h3>
-            <button type="button" onClick={addSpec} className="btn-secondary text-xs py-2 px-3"><Plus size={14} /> Ajouter</button>
+            <div>
+              <h3 className="font-semibold text-text-primary">Spécifications techniques</h3>
+              <p className="text-xs text-text-muted">Caractéristiques affichées sur la fiche produit</p>
+            </div>
+            <button type="button" onClick={addSpec} className="btn-secondary text-xs py-2 px-3">
+              <Plus size={14} /> Ajouter
+            </button>
           </div>
-          {specs.length === 0 ? <p className="text-sm text-text-muted text-center py-4">Aucune spec</p>
-          : (
+          {specs.length === 0 ? (
+            <p className="text-sm text-text-muted text-center py-4">Aucune spécification technique pour l'instant</p>
+          ) : (
             <div className="space-y-3">
               {specs.map((s, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <input type="text" value={s.icone} onChange={e => updateSpec(idx, 'icone', e.target.value)}
-                    className="input-field w-28" placeholder="Icône" />
-                  <input type="text" value={s.libelle} onChange={e => updateSpec(idx, 'libelle', e.target.value)}
-                    className="input-field flex-1" placeholder="Libellé (ex: RAM)" />
-                  <input type="text" value={s.valeur} onChange={e => updateSpec(idx, 'valeur', e.target.value)}
-                    className="input-field flex-1" placeholder="Valeur (ex: 16 Go)" />
-                  <button type="button" onClick={() => removeSpec(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={14} /></button>
+                <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-3 sm:p-2 bg-surface-tertiary sm:bg-transparent rounded-xl sm:rounded-none">
+                  {/* Pastille icône automatique */}
+                  <div className="w-9 h-9 rounded-lg bg-primary-100 flex items-center justify-center shrink-0 text-primary-700 shadow-xs">
+                    <SpecIcon iconName={s.icone} libelle={s.libelle} size={18} />
+                  </div>
+                  <input
+                    type="text"
+                    value={s.libelle}
+                    onChange={e => updateSpec(idx, 'libelle', e.target.value)}
+                    className="input-field sm:w-1/3 text-xs sm:text-sm font-medium"
+                    placeholder="Libellé (ex: Processeur, RAM...)"
+                  />
+                  <input
+                    type="text"
+                    value={s.valeur}
+                    onChange={e => updateSpec(idx, 'valeur', e.target.value)}
+                    className="input-field flex-1 text-xs sm:text-sm"
+                    placeholder="Valeur (ex: Intel Core i7, 16 Go...)"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeSpec(idx)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg self-end sm:self-center transition-colors"
+                    title="Supprimer"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               ))}
             </div>
