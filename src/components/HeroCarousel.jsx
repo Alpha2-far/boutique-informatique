@@ -137,6 +137,8 @@ export default function HeroCarousel({ products = [] }) {
                   <img
                     src={imageUrl}
                     alt={currentProduct.nom}
+                    fetchPriority="high"
+                    decoding="async"
                     className="max-h-[180px] sm:max-h-[250px] md:max-h-[320px] w-auto max-w-full object-contain drop-shadow-2xl"
                   />
                 ) : (

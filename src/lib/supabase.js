@@ -15,17 +15,18 @@ function getApiUrl() {
   return DIRECT_URL
 }
 
-// ─── Cache Client Intelligent SWR ─────────────────────────────
+// ─── Cache Client Intelligent SWR Persistant (localStorage + mémoire) ───
 const memCache = new Map()
-const CACHE_TTL_MS = 1000 * 60 * 3 // 3 minutes
+const CACHE_FRESH_MS = 1000 * 60 * 5 // 5 minutes de fraîcheur
+const CACHE_MAX_STALE_MS = 1000 * 60 * 60 // 1 heure de validité stale pour affichage 0ms
 
 export function clearProductsCache() {
   memCache.clear()
-  if (typeof sessionStorage !== 'undefined') {
+  if (typeof localStorage !== 'undefined') {
     try {
-      Object.keys(sessionStorage).forEach((key) => {
+      Object.keys(localStorage).forEach((key) => {
         if (key.startsWith('gq_cache_')) {
-          sessionStorage.removeItem(key)
+          localStorage.removeItem(key)
         }
       })
     } catch {}
@@ -42,63 +43,81 @@ async function apiGet(action, params = {}, retries = 2) {
   const urlParams = new URLSearchParams({ action, ...params })
   const cacheKey = `gq_cache_${action}_${urlParams.toString()}`
 
-  // 1. Vérifier si un cache valide existe (réponse instantanée 0ms)
+  // 1. Vérification Mémoire (0ms absolu)
   const cachedMem = memCache.get(cacheKey)
-  if (cachedMem && Date.now() - cachedMem.time < CACHE_TTL_MS) {
+  if (cachedMem && Date.now() - cachedMem.time < CACHE_FRESH_MS) {
     return cachedMem.data
   }
 
-  if (typeof sessionStorage !== 'undefined') {
+  // 2. Vérification LocalStorage (Persistant même après fermeture du navigateur mobile)
+  let staleData = cachedMem ? cachedMem.data : null
+  if (!staleData && typeof localStorage !== 'undefined') {
     try {
-      const stored = sessionStorage.getItem(cacheKey)
+      const stored = localStorage.getItem(cacheKey)
       if (stored) {
         const parsed = JSON.parse(stored)
-        if (parsed && Date.now() - parsed.time < CACHE_TTL_MS) {
+        if (parsed && Date.now() - parsed.time < CACHE_MAX_STALE_MS) {
           memCache.set(cacheKey, parsed)
-          return parsed.data
+          staleData = parsed.data
+          // Si les données sont encore fraîches (< 5 min), retour immédiat sans requête réseau
+          if (Date.now() - parsed.time < CACHE_FRESH_MS) {
+            return parsed.data
+          }
         }
       }
     } catch {}
   }
 
-  // 2. Requête réseau avec retries
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const response = await fetch(`${baseUrl}?${urlParams.toString()}`, {
-        method: 'GET',
-        redirect: 'follow',
-      })
-      if (!response.ok) {
-        throw new Error(`Erreur réseau (${response.status})`)
-      }
-      const text = await response.text()
-      if (!text.trim().startsWith('{')) {
-        throw new Error('Réponse non JSON de Google Apps Script')
-      }
-      const result = JSON.parse(text)
-      if (result.success === false) {
-        throw new Error(result.error || 'Erreur lors de la récupération des données')
-      }
-      const data = result.data !== undefined ? result.data : result
+  // Fonction interne de fetch réseau
+  const fetchFromNetwork = async () => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const response = await fetch(`${baseUrl}?${urlParams.toString()}`, {
+          method: 'GET',
+          redirect: 'follow',
+        })
+        if (!response.ok) {
+          throw new Error(`Erreur réseau (${response.status})`)
+        }
+        const text = await response.text()
+        if (!text.trim().startsWith('{')) {
+          throw new Error('Réponse non JSON de Google Apps Script')
+        }
+        const result = JSON.parse(text)
+        if (result.success === false) {
+          throw new Error(result.error || 'Erreur lors de la récupération des données')
+        }
+        const data = result.data !== undefined ? result.data : result
 
-      // Sauvegarder en cache
-      const cacheEntry = { data, time: Date.now() }
-      memCache.set(cacheKey, cacheEntry)
-      if (typeof sessionStorage !== 'undefined') {
-        try {
-          sessionStorage.setItem(cacheKey, JSON.stringify(cacheEntry))
-        } catch {}
-      }
+        // Sauvegarder en cache mémoire et localStorage
+        const cacheEntry = { data, time: Date.now() }
+        memCache.set(cacheKey, cacheEntry)
+        if (typeof localStorage !== 'undefined') {
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(cacheEntry))
+          } catch {}
+        }
 
-      return data
-    } catch (err) {
-      if (attempt < retries) {
-        await wait(500 * (attempt + 1))
-        continue
+        return data
+      } catch (err) {
+        if (attempt < retries) {
+          await wait(400 * (attempt + 1))
+          continue
+        }
+        throw err
       }
-      throw err
     }
   }
+
+  // Si on a des données locales (stale-while-revalidate), on les retourne immédiatement en 0ms
+  // et on lance la revalidation discrètement en tâche de fond !
+  if (staleData) {
+    fetchFromNetwork().catch(console.error)
+    return staleData
+  }
+
+  // Sinon, première visite : on attend le résultat réseau
+  return await fetchFromNetwork()
 }
 
 async function apiPost(action, payload = {}, retries = 2) {

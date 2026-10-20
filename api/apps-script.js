@@ -1,3 +1,7 @@
+// Cache mémoire in-process Vercel Serverless
+const serverCache = new Map();
+const SERVER_CACHE_TTL_MS = 1000 * 90; // 90 secondes
+
 async function sendToAppsScript(url, payload) {
   const response = await fetch(url, {
     method: 'POST',
@@ -28,8 +32,26 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const url = new URL(SCRIPT_URL);
-      for (const [key, value] of Object.entries(req.query || {})) {
+      const queryEntries = Object.entries(req.query || {}).sort(([a], [b]) => a.localeCompare(b));
+      for (const [key, value] of queryEntries) {
         url.searchParams.set(key, value);
+      }
+
+      const cacheKey = url.searchParams.toString();
+      const action = req.query?.action || '';
+
+      // Ne pas cacher le check_slug ni le ping
+      const isCachable = action !== 'check_slug' && action !== 'ping';
+
+      // 1. Vérifier si la réponse est en mémoire vive du serveur Vercel (servie en ~2ms)
+      if (isCachable) {
+        const cached = serverCache.get(cacheKey);
+        if (cached && Date.now() - cached.time < SERVER_CACHE_TTL_MS) {
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.setHeader('Cache-Control', 'public, s-maxage=90, stale-while-revalidate=600');
+          res.setHeader('X-GQ-Cache', 'HIT');
+          return res.status(200).send(cached.text);
+        }
       }
 
       const response = await fetch(url.toString(), {
@@ -37,13 +59,22 @@ export default async function handler(req, res) {
         redirect: 'follow',
       });
       const text = await response.text();
+
+      // Mettre en cache mémoire si succès
+      if (isCachable && response.status === 200 && text.trim().startsWith('{')) {
+        serverCache.set(cacheKey, { text, time: Date.now() });
+      }
+
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      // Cache Vercel Edge CDN : réponse servie en < 30ms mondialement
-      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+      res.setHeader('Cache-Control', 'public, s-maxage=90, stale-while-revalidate=600');
+      res.setHeader('X-GQ-Cache', 'MISS');
       return res.status(response.status).send(text);
     }
 
     if (req.method === 'POST') {
+      // Invalidation immédiate du cache lors de toute écriture
+      serverCache.clear();
+
       let data = null;
       try {
         data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -74,13 +105,12 @@ export default async function handler(req, res) {
           parsed = JSON.parse(result.text);
         } catch {}
 
-        // Si le script distant supporte save_product_full en direct
         if (parsed && parsed.success) {
           res.setHeader('Content-Type', 'application/json; charset=utf-8');
           return res.status(result.status).send(result.text);
         }
 
-        // Si le script distant n'a pas encore été mis à jour, orchestration parallèle côté Vercel
+        // Orchestration parallèle côté Vercel si script distant ancien
         if (!parsed || (!parsed.success && parsed.error && parsed.error.includes('inconnue'))) {
           const { product, images, specs } = data;
           const prodRes = await sendToAppsScript(SCRIPT_URL, { action: 'upsert_product', product });
@@ -91,7 +121,6 @@ export default async function handler(req, res) {
           }
           const savedProduct = prodParsed.data;
 
-          // Sauvegarde concurrente des images et des caractéristiques
           await Promise.all([
             images ? sendToAppsScript(SCRIPT_URL, {
               action: 'save_product_images',

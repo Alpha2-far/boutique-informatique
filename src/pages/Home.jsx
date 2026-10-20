@@ -39,7 +39,7 @@ export default function Home() {
     fetchCategories().then(setCategories).catch(console.error)
   }, [])
 
-  // Load products
+  // Load products & derive featured for hero (1 seule requête réseau au lieu de 3)
   useEffect(() => {
     setLoading(true)
     const filters = {}
@@ -49,26 +49,21 @@ export default function Home() {
     if (search) filters.search = search
 
     fetchProducts(filters)
-      .then(setProducts)
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [selectedCategory, selectedEtat, searchParams])
-
-  // Load featured products for hero
-  useEffect(() => {
-    fetchProducts({ en_vedette: 'true' })
       .then((res) => {
-        if (res && res.length > 0) {
-          setFeaturedProducts(res)
-        } else {
-          // Si aucun produit n'est explicitement marqué en vedette, afficher les 3 premiers
-          fetchProducts().then((all) => {
-            if (all && all.length > 0) setFeaturedProducts(all.slice(0, 6))
-          }).catch(console.error)
+        const productList = res || []
+        setProducts(productList)
+
+        // Dériver automatiquement les produits du Hero sans aucun appel réseau supplémentaire
+        if (!selectedCategory && selectedEtat === 'tous' && !search) {
+          const featured = productList.filter(
+            (p) => p.en_vedette === true || p.en_vedette === 'true' || p.en_vedette === 1 || p.en_vedette === '1'
+          )
+          setFeaturedProducts(featured.length > 0 ? featured : productList.slice(0, 6))
         }
       })
       .catch(console.error)
-  }, [])
+      .finally(() => setLoading(false))
+  }, [selectedCategory, selectedEtat, searchParams])
 
   // Sort products
   const sortedProducts = useMemo(() => {

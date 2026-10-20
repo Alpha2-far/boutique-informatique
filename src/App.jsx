@@ -1,21 +1,33 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Link } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import WhatsAppWidget from './components/WhatsAppWidget'
-import Home from './pages/Home'
-import Shop from './pages/Shop'
-import Contact from './pages/Contact'
-import ProductDetail from './pages/ProductDetail'
-import Cart from './pages/Cart'
-import Wishlist from './pages/Wishlist'
-import Categorie from './pages/Categorie'
-import Terms from './pages/Terms'
-import PrivacyPolicy from './pages/PrivacyPolicy'
-import AdminLayout from './admin/AdminLayout'
-import Login from './admin/Login'
-import Categories from './admin/Categories'
-import Products from './admin/Products'
-import ProductForm from './admin/ProductForm'
+import Home from './pages/Home' // Home reste direct pour un FCP instantané
+
+// Code Splitting : chargement à la demande des routes secondaires et de l'administration
+const Shop = lazy(() => import('./pages/Shop'))
+const Contact = lazy(() => import('./pages/Contact'))
+const ProductDetail = lazy(() => import('./pages/ProductDetail'))
+const Cart = lazy(() => import('./pages/Cart'))
+const Wishlist = lazy(() => import('./pages/Wishlist'))
+const Categorie = lazy(() => import('./pages/Categorie'))
+const Terms = lazy(() => import('./pages/Terms'))
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
+const AdminLayout = lazy(() => import('./admin/AdminLayout'))
+const Login = lazy(() => import('./admin/Login'))
+const Categories = lazy(() => import('./admin/Categories'))
+const Products = lazy(() => import('./admin/Products'))
+const ProductForm = lazy(() => import('./admin/ProductForm'))
+
+// Indicateur de chargement ultra-léger et discret
+function PageLoader() {
+  return (
+    <div className="min-h-[50vh] flex items-center justify-center">
+      <div className="w-8 h-8 border-3 border-primary-200 border-t-primary-700 rounded-full animate-spin" />
+    </div>
+  )
+}
 
 function PublicLayout({ children }) {
   return (
@@ -55,27 +67,29 @@ function AdminDashboard() {
 
 export default function App() {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
-      <Route path="/boutique" element={<PublicLayout><Shop /></PublicLayout>} />
-      <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
-      <Route path="/produit/:slug" element={<PublicLayout><ProductDetail /></PublicLayout>} />
-      <Route path="/panier" element={<PublicLayout><Cart /></PublicLayout>} />
-      <Route path="/favoris" element={<PublicLayout><Wishlist /></PublicLayout>} />
-      <Route path="/categorie/:slug" element={<PublicLayout><Categorie /></PublicLayout>} />
-      <Route path="/conditions-generales" element={<PublicLayout><Terms /></PublicLayout>} />
-      <Route path="/politique-confidentialite" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+        <Route path="/boutique" element={<PublicLayout><Shop /></PublicLayout>} />
+        <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+        <Route path="/produit/:slug" element={<PublicLayout><ProductDetail /></PublicLayout>} />
+        <Route path="/panier" element={<PublicLayout><Cart /></PublicLayout>} />
+        <Route path="/favoris" element={<PublicLayout><Wishlist /></PublicLayout>} />
+        <Route path="/categorie/:slug" element={<PublicLayout><Categorie /></PublicLayout>} />
+        <Route path="/conditions-generales" element={<PublicLayout><Terms /></PublicLayout>} />
+        <Route path="/politique-confidentialite" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
 
-      {/* Admin Routes */}
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="login" element={<Login />} />
-        <Route path="categories" element={<Categories />} />
-        <Route path="produits" element={<Products />} />
-        <Route path="produits/nouveau" element={<ProductForm />} />
-        <Route path="produits/:id/modifier" element={<ProductForm />} />
-      </Route>
-    </Routes>
+        {/* Admin Routes (chargées uniquement lors d'un accès /admin) */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="login" element={<Login />} />
+          <Route path="categories" element={<Categories />} />
+          <Route path="produits" element={<Products />} />
+          <Route path="produits/nouveau" element={<ProductForm />} />
+          <Route path="produits/:id/modifier" element={<ProductForm />} />
+        </Route>
+      </Routes>
+    </Suspense>
   )
 }
