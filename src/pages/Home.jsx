@@ -63,7 +63,7 @@ export default function Home() {
         } else {
           // Si aucun produit n'est explicitement marqué en vedette, afficher les 3 premiers
           fetchProducts().then((all) => {
-            if (all && all.length > 0) setFeaturedProducts(all.slice(0, 3))
+            if (all && all.length > 0) setFeaturedProducts(all.slice(0, 6))
           }).catch(console.error)
         }
       })
