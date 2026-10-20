@@ -141,6 +141,10 @@ function doPost(e) {
         result = deleteProduct(data.id);
         break;
 
+      case 'toggle_product_en_vedette':
+        result = toggleProductEnVedette(data.id, data.en_vedette);
+        break;
+
       case 'save_product_images':
         result = saveProductImages(data.product_id, data.images);
         break;
@@ -368,7 +372,7 @@ function getProducts(params) {
     products = products.filter(p => p.etat === params.etat);
   }
   if (params.en_vedette === 'true' || params.en_vedette === true) {
-    products = products.filter(p => p.en_vedette === true || p.en_vedette === 'true');
+    products = products.filter(p => p.en_vedette === true || p.en_vedette === 'true' || p.en_vedette === 'TRUE' || p.en_vedette === 'oui' || p.en_vedette === 1 || p.en_vedette === '1');
   }
   if (params.search) {
     const q = params.search.toLowerCase();
@@ -458,6 +462,20 @@ function toggleProductActive(id, actif) {
   const colIndex = headers.indexOf('actif') + 1;
   if (colIndex > 0) {
     sheet.getRange(existing._rowIndex, colIndex).setValue(actif);
+  }
+  return { success: true };
+}
+
+function toggleProductEnVedette(id, en_vedette) {
+  const sheet = getSheet('products');
+  const rows = getRowsAsObjects('products');
+  const existing = rows.find(r => r.id === id);
+  if (!existing) return { success: false, error: 'Produit non trouvé' };
+
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+  const colIndex = headers.indexOf('en_vedette') + 1;
+  if (colIndex > 0) {
+    sheet.getRange(existing._rowIndex, colIndex).setValue(Boolean(en_vedette));
   }
   return { success: true };
 }

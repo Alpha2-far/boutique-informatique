@@ -103,14 +103,16 @@ export default function ProductDetail() {
   return (
     <>
       <Helmet>
-        <title>{product.nom} | GQ Store</title>
-        <meta name="description" content={product.description?.substring(0, 160) || `Achetez ${product.nom} au meilleur prix chez GQ Store. Prix: ${formatPrice(product.prix)}`} />
-        <meta name="keywords" content={`${product.nom}, ${product.categories?.nom || ''}, matériel informatique, high-tech, ${product.marque || ''}`} />
+        <title>{product.nom} — GQ Store Bénin</title>
+        <link rel="canonical" href={`https://gqstore.com/produit/${product.slug}`} />
+        <meta name="description" content={product.description?.substring(0, 160) || `Achetez ${product.nom} (${formatEtat(product.etat)}) au meilleur prix chez GQ Store à Calavi, Bénin. Prix: ${formatPrice(product.prix)}`} />
+        <meta name="keywords" content={`${product.nom}, ${product.categories?.nom || ''}, matériel informatique, ordinateur portable, PC Bénin, GQ Store`} />
 
-        {/* Open Graph / Facebook */}
+        {/* Open Graph / Facebook / WhatsApp */}
         <meta property="og:type" content="product" />
-        <meta property="og:title" content={`${product.nom} | GQ Store`} />
-        <meta property="og:description" content={product.description?.substring(0, 160) || `Achetez ${product.nom} au meilleur prix chez GQ Store`} />
+        <meta property="og:title" content={`${product.nom} — GQ Store Bénin`} />
+        <meta property="og:description" content={product.description?.substring(0, 160) || `Commandez ${product.nom} au meilleur prix chez GQ Store (${formatPrice(product.prix)})`} />
+        <meta property="og:url" content={`https://gqstore.com/produit/${product.slug}`} />
         <meta property="og:image" content={imageUrl || 'https://via.placeholder.com/1200x1200'} />
         <meta property="og:price:amount" content={product.prix} />
         <meta property="og:price:currency" content="XOF" />

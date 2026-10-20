@@ -1,0 +1,40 @@
+# GQ Store — Vente de Matériel Informatique & High-Tech à Calavi, Bénin
+
+> Fichier d'orientation pour modèles de langage (LLMs) et assistants intelligents.
+
+## 1. Identité & Présentation
+- **Nom de l'établissement** : GQ Store (ou GQ-Store)
+- **Activité principale** : Boutique physique et en ligne spécialisée dans la vente d'ordinateurs portables (PC Neufs et "Venues propres" reconditionnés garantis), bureautique, gaming, composants et accessoires high-tech.
+- **Localisation** : Calavi Bidossessi, Abomey-Calavi, République du Bénin.
+- **Boutique physique** : Oui, showroom ouvert aux clients pour tester et inspecter le matériel sur place.
+- **Horaires d'ouverture** : Lundi – Samedi de 09H30 à 20H30. Dimanche fermé.
+- **Site web officiel** : https://gqstore.com (déployé sur Vercel)
+
+## 2. Coordonnées & Contact Direct
+- **Téléphone direct (Appels)** : +229 01 08 47 13 66
+- **WhatsApp direct (Messages & Commandes)** : +229 98 47 13 66 (https://wa.me/22998471366)
+- **Localisation Google Maps** : Calavi Bidossessi, Bénin
+
+## 3. Catalogue & Produits
+- **Ordinateurs Portables Neufs** : HP EliteBook, HP ProBook, Dell Latitude, Lenovo ThinkPad, Apple MacBook... Emballage scellé d'origine, garantie constructeur de 6 à 12 mois.
+- **Ordinateurs "Venue Propre" (Reconditionnés certifiés)** : Ordinateurs d'importation rigoureusement testés en atelier (batterie vérifiée, processeurs Intel Core i5/i7/i9, AMD Ryzen, disques SSD rapides, écran intact, clavier fonctionnel). Garantis de 1 à 3 mois.
+- **Composants & Accessoires** : Disques SSD, barrettes RAM, chargeurs originaux pour PC, souris, casques, adaptateurs.
+- **Gamme de Prix** : De 100 000 FCFA à plus de 1 000 000 FCFA selon la gamme et la configuration.
+
+## 4. Modalités de Commande & Livraison
+- **Comment commander** :
+  1. Parcourir le catalogue sur https://gqstore.com
+  2. Cliquer sur un produit pour voir ses caractéristiques complètes (processeur, RAM, stockage, état, photos réelles).
+  3. Cliquer sur "Commander sur WhatsApp" ou "Ajouter au panier".
+  4. La commande est confirmée immédiatement par un conseiller GQ Store sur WhatsApp.
+- **Zones de livraison** :
+  - Calavi et Cotonou : Livraison express en moins de 24h à domicile ou au bureau.
+  - Villes régionales (Porto-Novo, Parakou, Bohicon, Natitingou, Ouidah, etc.) : Expédition rapide et sécurisée par les compagnies de transport partenaires.
+- **Moyens de paiement acceptés** :
+  - Paiement en espèces (Cash) à la livraison après vérification du produit.
+  - Mobile Money : MTN Mobile Money (MoMo) et Moov Money.
+
+## 5. Garanties & Service Après-Vente (SAV)
+- Matériel garanti : Neuf (6 à 12 mois) / Venue propre (1 à 3 mois de garantie fonctionnelle).
+- Droit d'échange sous 48h à 7 jours en cas d'anomalie technique non résolue.
+- Assistance et conseil avant et après l'achat.

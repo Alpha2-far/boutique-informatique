@@ -38,6 +38,8 @@ export default async function handler(req, res) {
       });
       const text = await response.text();
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      // Cache Vercel Edge CDN : réponse servie en < 30ms mondialement
+      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
       return res.status(response.status).send(text);
     }
 

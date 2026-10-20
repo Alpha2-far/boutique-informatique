@@ -73,7 +73,7 @@ export default function ProductCard({ product }) {
 
   return (
     <motion.div
-      className="card cursor-pointer group"
+      className="card cursor-pointer group flex flex-col h-full"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => navigate(`/produit/${product.slug}`)}
@@ -81,7 +81,7 @@ export default function ProductCard({ product }) {
       transition={{ duration: 0.2 }}
     >
       {/* Image container */}
-      <div className="relative aspect-square bg-surface-tertiary overflow-hidden">
+      <div className="relative aspect-square bg-surface-tertiary overflow-hidden shrink-0">
         {/* Badge */}
         <div className="absolute top-2.5 left-2.5 z-10">
           <span className={getEtatBadgeClass(product.etat)}>
@@ -132,35 +132,41 @@ export default function ProductCard({ product }) {
       </div>
 
       {/* Content */}
-      <div className="p-3.5">
-        {/* Product Name */}
-        <h3 className="text-sm font-semibold text-text-primary uppercase line-clamp-2 leading-tight mb-2">
+      <div className="p-3.5 flex flex-col flex-1">
+        {/* Product Name (exact 2-line height so all titles align) */}
+        <h3 className="text-sm font-semibold text-text-primary uppercase line-clamp-2 leading-tight h-10 min-h-[2.5rem] mb-2">
           {product.nom}
         </h3>
 
-        {/* Specs Pills */}
-        {specs.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-2.5">
-            {specs.map((spec) => (
+        {/* Specs Pills (uniform slot of 52px so cards never shift) */}
+        <div className="h-[52px] min-h-[52px] max-h-[52px] overflow-hidden flex flex-wrap content-start gap-1.5 mb-2.5">
+          {specs.length > 0 ? (
+            specs.map((spec) => (
               <span
-                key={spec.id}
-                className="inline-flex items-center gap-1 bg-surface-tertiary text-text-muted text-[10px] font-medium px-2 py-1 rounded"
+                key={spec.id || spec.libelle}
+                className="inline-flex items-center gap-1 bg-surface-tertiary text-text-muted text-[10px] font-medium px-2 py-1 rounded max-w-full truncate"
+                title={`${spec.libelle ? spec.libelle + ': ' : ''}${spec.valeur}`}
               >
                 {spec.valeur}
               </span>
-            ))}
-          </div>
-        )}
-
-        {/* Rating */}
-        <div className="mb-2">
-          <StarRating />
+            ))
+          ) : (
+            <span className="text-[11px] text-text-light italic self-center">Matériel garanti & testé</span>
+          )}
         </div>
 
-        {/* Price */}
-        <p className="text-base font-bold text-text-primary price-format">
-          {formatPrice(product.prix)}
-        </p>
+        {/* Bottom Section (pinned to bottom with mt-auto) */}
+        <div className="mt-auto pt-1">
+          {/* Rating */}
+          <div className="mb-1.5">
+            <StarRating />
+          </div>
+
+          {/* Price */}
+          <p className="text-base font-bold text-text-primary price-format">
+            {formatPrice(product.prix)}
+          </p>
+        </div>
       </div>
     </motion.div>
   )

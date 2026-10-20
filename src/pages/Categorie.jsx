@@ -139,6 +139,7 @@ export default function Categorie() {
             {[
               { value: 'tous', label: 'Tous' },
               { value: 'neuf', label: 'Neuf' },
+              { value: 'venue_propre', label: 'Venue propre' },
               { value: 'occasion', label: 'Occasion' },
             ].map((opt) => (
               <button
@@ -206,6 +207,7 @@ export default function Categorie() {
                   {[
                     { value: 'tous', label: 'Tous' },
                     { value: 'neuf', label: 'Neuf' },
+                    { value: 'venue_propre', label: 'Venue propre' },
                     { value: 'occasion', label: 'Occasion' },
                   ].map((opt) => (
                     <label key={opt.value} className="flex items-center gap-2 cursor-pointer">

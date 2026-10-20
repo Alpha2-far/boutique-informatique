@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>GQ Store — Matériel Informatique &amp; PC Portables à Calavi</title>
+    <link>https://gqstore.com/</link>
+    <description>Dernières arrivées d'ordinateurs portables Neufs et Venues propres au Bénin chez GQ Store.</description>
+    <language>fr-FR</language>
+    <lastBuildDate>Tue, 20 Oct 2026 12:00:00 +0100</lastBuildDate>
+    <atom:link href="https://gqstore.com/rss.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Nouvel arrivage : HP EliteBook 640 G11 Neuf scellé</title>
+      <link>https://gqstore.com/</link>
+      <guid isPermaLink="false">gq-store-hp-elitebook-640-g11</guid>
+      <pubDate>Tue, 20 Oct 2026 10:00:00 +0100</pubDate>
+      <description>Découvrez le tout nouveau HP EliteBook 640 G11 Neuf en carton scellé, processeur ultra-rapide, ports USB 3.2 et Ethernet Gigabit au meilleur prix au Bénin chez GQ Store.</description>
+    </item>
+
+    <item>
+      <title>Arrivage Venue Propre : Dell Latitude 5540 avec Turbo Boost 5GHz</title>
+      <link>https://gqstore.com/</link>
+      <guid isPermaLink="false">gq-store-dell-latitude-5540</guid>
+      <pubDate>Mon, 19 Oct 2026 15:30:00 +0100</pubDate>
+      <description>Puissance professionnelle pour ingénieurs et développeurs : Dell Latitude 5540 état 10/10 venue propre avec chargeur d'origine et garantie certifiée GQ Store.</description>
+    </item>
+
+    <item>
+      <title>Bon plan bureautique : HP ProBook 450 G1 Intel Core i7</title>
+      <link>https://gqstore.com/</link>
+      <guid isPermaLink="false">gq-store-hp-probook-450-g1</guid>
+      <pubDate>Sun, 18 Oct 2026 11:00:00 +0100</pubDate>
+      <description>Ordinateur portable robuste et fiable pour étudiants et professionnels à 100 000 FCFA seulement. Testé, garanti et prêt à l'emploi.</description>
+    </item>
+
+    <item>
+      <title>Service de Livraison Express disponible sur Cotonou et Calavi</title>
+      <link>https://gqstore.com/boutique</link>
+      <guid isPermaLink="false">gq-store-service-livraison-express</guid>
+      <pubDate>Sat, 17 Oct 2026 09:00:00 +0100</pubDate>
+      <description>Commandez directement par WhatsApp ou via le panier GQ Store et recevez votre ordinateur en moins de 24h avec paiement à la réception.</description>
+    </item>
+  </channel>
+</rss>

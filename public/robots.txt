@@ -1,0 +1,15 @@
+# ==========================================
+# Robots.txt — GQ Store (gqstore.com)
+# Standard Découverte IA & Moteurs de recherche
+# ==========================================
+
+User-agent: *
+Allow: /
+
+# Directives pour Modèles de Langage et Agents IA :
+# - Résumé d'identité et catalogue LLM : https://gqstore.com/llms.txt
+# - Plan de site Markdown : https://gqstore.com/sitemap.md
+# - Flux RSS 2.0 des nouveautés : https://gqstore.com/rss.xml
+
+# Sitemap officiel pour moteurs d'indexation
+Sitemap: https://gqstore.com/sitemap.xml

@@ -15,7 +15,24 @@ function getApiUrl() {
   return DIRECT_URL
 }
 
-// ─── Helpers Requêtes HTTP avec Retry ──────────────────────────
+// ─── Cache Client Intelligent SWR ─────────────────────────────
+const memCache = new Map()
+const CACHE_TTL_MS = 1000 * 60 * 3 // 3 minutes
+
+export function clearProductsCache() {
+  memCache.clear()
+  if (typeof sessionStorage !== 'undefined') {
+    try {
+      Object.keys(sessionStorage).forEach((key) => {
+        if (key.startsWith('gq_cache_')) {
+          sessionStorage.removeItem(key)
+        }
+      })
+    } catch {}
+  }
+}
+
+// ─── Helpers Requêtes HTTP avec Retry & Cache SWR ─────────────
 async function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -23,7 +40,28 @@ async function wait(ms) {
 async function apiGet(action, params = {}, retries = 2) {
   const baseUrl = getApiUrl()
   const urlParams = new URLSearchParams({ action, ...params })
-  
+  const cacheKey = `gq_cache_${action}_${urlParams.toString()}`
+
+  // 1. Vérifier si un cache valide existe (réponse instantanée 0ms)
+  const cachedMem = memCache.get(cacheKey)
+  if (cachedMem && Date.now() - cachedMem.time < CACHE_TTL_MS) {
+    return cachedMem.data
+  }
+
+  if (typeof sessionStorage !== 'undefined') {
+    try {
+      const stored = sessionStorage.getItem(cacheKey)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed && Date.now() - parsed.time < CACHE_TTL_MS) {
+          memCache.set(cacheKey, parsed)
+          return parsed.data
+        }
+      }
+    } catch {}
+  }
+
+  // 2. Requête réseau avec retries
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const response = await fetch(`${baseUrl}?${urlParams.toString()}`, {
@@ -41,7 +79,18 @@ async function apiGet(action, params = {}, retries = 2) {
       if (result.success === false) {
         throw new Error(result.error || 'Erreur lors de la récupération des données')
       }
-      return result.data !== undefined ? result.data : result
+      const data = result.data !== undefined ? result.data : result
+
+      // Sauvegarder en cache
+      const cacheEntry = { data, time: Date.now() }
+      memCache.set(cacheKey, cacheEntry)
+      if (typeof sessionStorage !== 'undefined') {
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify(cacheEntry))
+        } catch {}
+      }
+
+      return data
     } catch (err) {
       if (attempt < retries) {
         await wait(500 * (attempt + 1))
@@ -78,6 +127,10 @@ async function apiPost(action, payload = {}, retries = 2) {
       if (result.success === false) {
         throw new Error(result.error || 'Erreur lors de l’enregistrement')
       }
+
+      // Invalider immédiatement le cache lors d'une écriture
+      clearProductsCache()
+
       return result.data !== undefined ? result.data : result
     } catch (err) {
       if (attempt < retries) {
@@ -249,7 +302,13 @@ export async function upsertProduct(product) {
 }
 
 export async function toggleProductActive(id, actif) {
+  clearProductsCache()
   return await apiPost('toggle_product_active', { id, actif })
+}
+
+export async function toggleProductEnVedette(id, en_vedette) {
+  clearProductsCache()
+  return await apiPost('toggle_product_en_vedette', { id, en_vedette })
 }
 
 export async function deleteProduct(id) {

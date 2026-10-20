@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search } from 'lucide-react'
-import { fetchAllProducts, fetchCategories, toggleProductActive, deleteProduct } from '../lib/supabase'
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Star } from 'lucide-react'
+import { fetchAllProducts, fetchCategories, toggleProductActive, toggleProductEnVedette, deleteProduct } from '../lib/supabase'
 import { getOptimizedUrl } from '../lib/cloudinary'
 import { formatPrice, getMainImage } from '../components/ProductCard'
 import { formatEtat, getEtatBadgeClass } from '../lib/utils'
@@ -34,6 +34,11 @@ export default function Products() {
 
   const handleToggle = async (id, current) => {
     try { await toggleProductActive(id, !current); await load() }
+    catch (e) { alert('Erreur: ' + e.message) }
+  }
+
+  const handleToggleVedette = async (id, current) => {
+    try { await toggleProductEnVedette(id, !current); await load() }
     catch (e) { alert('Erreur: ' + e.message) }
   }
 
@@ -85,7 +90,7 @@ export default function Products() {
               <th className="text-left text-xs font-semibold text-text-muted px-4 py-3">Catégorie</th>
               <th className="text-left text-xs font-semibold text-text-muted px-4 py-3">État</th>
               <th className="text-right text-xs font-semibold text-text-muted px-4 py-3">Prix</th>
-
+              <th className="text-center text-xs font-semibold text-text-muted px-4 py-3">Vedette</th>
               <th className="text-center text-xs font-semibold text-text-muted px-4 py-3">Actif</th>
               <th className="text-right text-xs font-semibold text-text-muted px-4 py-3">Actions</th>
             </tr></thead>
@@ -93,6 +98,7 @@ export default function Products() {
               {filtered.map(p => {
                 const img = getMainImage(p)
                 const url = img ? getOptimizedUrl(img.cloudinary_url, { width: 60, height: 60 }) : null
+                const isVedette = p.en_vedette === true || p.en_vedette === 'true' || p.en_vedette === 'TRUE' || p.en_vedette === 'oui' || p.en_vedette === 1
                 return (
                   <tr key={p.id} className="border-b border-border last:border-0 hover:bg-surface-secondary/50">
                     <td className="px-4 py-3">
@@ -107,6 +113,21 @@ export default function Products() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm font-semibold text-text-primary text-right price-format">{formatPrice(p.prix)}</td>
+
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleVedette(p.id, isVedette)}
+                        className={`p-1.5 rounded-lg transition-all ${
+                          isVedette
+                            ? 'text-amber-500 bg-amber-50 hover:bg-amber-100 ring-1 ring-amber-300'
+                            : 'text-gray-300 hover:text-amber-400 hover:bg-gray-100'
+                        }`}
+                        title={isVedette ? 'En vedette sur le Hero (cliquer pour retirer)' : 'Mettre en vedette dans le Hero Carrousel'}
+                      >
+                        <Star size={16} fill={isVedette ? 'currentColor' : 'none'} />
+                      </button>
+                    </td>
 
                     <td className="px-4 py-3 text-center">
                       <button onClick={() => handleToggle(p.id, p.actif)}

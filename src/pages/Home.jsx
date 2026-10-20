@@ -56,8 +56,17 @@ export default function Home() {
 
   // Load featured products for hero
   useEffect(() => {
-    fetchProducts({ en_vedette: true })
-      .then(setFeaturedProducts)
+    fetchProducts({ en_vedette: 'true' })
+      .then((res) => {
+        if (res && res.length > 0) {
+          setFeaturedProducts(res)
+        } else {
+          // Si aucun produit n'est explicitement marqué en vedette, afficher les 3 premiers
+          fetchProducts().then((all) => {
+            if (all && all.length > 0) setFeaturedProducts(all.slice(0, 3))
+          }).catch(console.error)
+        }
+      })
       .catch(console.error)
   }, [])
 
@@ -82,16 +91,20 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>GQ Store | Matériel informatique et high-tech</title>
+        <title>GQ-Store — Matériel Informatique &amp; PC Portables à Calavi, Bénin</title>
+        <link rel="canonical" href="https://gqstore.com/" />
         <meta name="description" content={siteDescription} />
-        <meta name="keywords" content="matériel informatique, high-tech, ordinateurs, smartphones, accessoires, électronique, GQ Store" />
+        <meta name="keywords" content="GQ-Store, matériel informatique Bénin, ordinateurs portables Calavi, PC venue propre, PC Neuf Bénin" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="GQ Store | Matériel informatique et high-tech" />
+        <meta property="og:title" content="GQ-Store — Matériel Informatique &amp; PC Portables à Calavi" />
         <meta property="og:description" content={siteDescription} />
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>
 
       <div>
+        {/* H1 SEO structuré pour moteur de recherche */}
+        <h1 className="sr-only">GQ-Store : Matériel Informatique &amp; Ordinateurs Portables de Qualité au Bénin</h1>
+
         {/* Hero Carousel */}
         <HeroCarousel products={featuredProducts} />
 
@@ -134,6 +147,7 @@ export default function Home() {
               {[
                 { value: 'tous', label: 'Tous' },
                 { value: 'neuf', label: 'Neuf' },
+                { value: 'venue_propre', label: 'Venue propre' },
                 { value: 'occasion', label: 'Occasion' },
               ].map((opt) => (
                 <button

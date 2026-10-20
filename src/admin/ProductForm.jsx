@@ -45,7 +45,8 @@ export default function ProductForm() {
       nom: data.nom, description: data.description || '',
       prix: data.prix, categorie_id: data.categorie_id || '',
       etat: data.etat,
-      en_vedette: data.en_vedette, actif: data.actif,
+      en_vedette: data.en_vedette === true || data.en_vedette === 'true' || data.en_vedette === 'TRUE' || data.en_vedette === 'oui' || data.en_vedette === 1,
+      actif: data.actif !== false && data.actif !== 'false',
     })
     setImages((data.product_images || []).sort((a, b) => a.ordre - b.ordre).map(i => ({
       id: i.id, cloudinary_url: i.cloudinary_url,
@@ -312,17 +313,80 @@ export default function ProductForm() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-6">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.en_vedette} onChange={e => setForm({...form, en_vedette: e.target.checked})}
-                  className="w-4 h-4 rounded border-border text-primary-700 focus:ring-primary-700" />
-                <span className="text-sm text-text-primary flex items-center gap-1"><Star size={14} /> En vedette</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.actif} onChange={e => setForm({...form, actif: e.target.checked})}
-                  className="w-4 h-4 rounded border-border text-primary-700 focus:ring-primary-700" />
-                <span className="text-sm text-text-primary">Actif</span>
-              </label>
+            {/* Options Vedette & Statut */}
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              {/* Option En Vedette */}
+              <div className={`p-4 rounded-xl border transition-all ${
+                form.en_vedette
+                  ? 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-400/20'
+                  : 'bg-surface-secondary border-border hover:border-gray-300'
+              }`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                      form.en_vedette ? 'bg-amber-500 text-white shadow-sm' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      <Star size={18} fill={form.en_vedette ? 'currentColor' : 'none'} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-text-primary flex items-center gap-2">
+                        En vedette (Hero Accueil)
+                        {form.en_vedette && (
+                          <span className="text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full uppercase">
+                            Actif
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-text-muted mt-0.5">
+                        Affiche ce produit dans le grand carrousel en haut de la page d'accueil.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={form.en_vedette}
+                      onChange={(e) => setForm({ ...form, en_vedette: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Option Actif (Visibilité boutique) */}
+              <div className={`p-4 rounded-xl border transition-all ${
+                form.actif
+                  ? 'bg-emerald-50/80 border-emerald-300 ring-2 ring-emerald-400/20'
+                  : 'bg-gray-50 border-gray-200 opacity-75'
+              }`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                      form.actif ? 'bg-emerald-600 text-white shadow-sm' : 'bg-gray-200 text-gray-400'
+                    }`}>
+                      <span className="text-xs font-bold">{form.actif ? 'ON' : 'OFF'}</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-text-primary">
+                        Visible en boutique
+                      </p>
+                      <p className="text-xs text-text-muted mt-0.5">
+                        {form.actif ? 'Le produit est visible et commandable.' : 'Masqué de la boutique publique.'}
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer select-none shrink-0 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={form.actif}
+                      onChange={(e) => setForm({ ...form, actif: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </div>

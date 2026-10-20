@@ -157,7 +157,7 @@ export default function Contact() {
 
               {/* Phone */}
               <a
-                href="tel:+22998471366"
+                href="tel:+2290108471366"
                 className="bg-white rounded-2xl border border-border p-6 hover:border-primary-700 transition-colors group"
               >
                 <div className="flex items-center gap-4">
@@ -165,8 +165,8 @@ export default function Contact() {
                     <Phone size={28} className="text-primary-700" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-text-primary mb-1">Téléphone</h3>
-                    <p className="text-text-secondary">+229 98 47 13 66</p>
+                    <h3 className="font-semibold text-text-primary mb-1">Téléphone (Appels)</h3>
+                    <p className="text-text-secondary">+229 01 08 47 13 66</p>
                   </div>
                 </div>
               </a>

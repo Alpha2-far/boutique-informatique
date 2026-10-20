@@ -9,6 +9,8 @@ import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
 import Wishlist from './pages/Wishlist'
 import Categorie from './pages/Categorie'
+import Terms from './pages/Terms'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 import AdminLayout from './admin/AdminLayout'
 import Login from './admin/Login'
 import Categories from './admin/Categories'
@@ -62,6 +64,8 @@ export default function App() {
       <Route path="/panier" element={<PublicLayout><Cart /></PublicLayout>} />
       <Route path="/favoris" element={<PublicLayout><Wishlist /></PublicLayout>} />
       <Route path="/categorie/:slug" element={<PublicLayout><Categorie /></PublicLayout>} />
+      <Route path="/conditions-generales" element={<PublicLayout><Terms /></PublicLayout>} />
+      <Route path="/politique-confidentialite" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminLayout />}>

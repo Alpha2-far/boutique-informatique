@@ -80,8 +80,9 @@ export default function Shop() {
                       <Phone size={24} className="text-primary-700" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-text-primary mb-1">Contact</h3>
-                      <p className="text-text-secondary">+229 98 47 13 66</p>
+                      <h3 className="font-semibold text-text-primary mb-1">Téléphone &amp; WhatsApp</h3>
+                      <p className="text-text-secondary text-sm">Appels : <a href="tel:+2290108471366" className="font-medium hover:underline">+229 01 08 47 13 66</a></p>
+                      <p className="text-text-muted text-xs mt-0.5">WhatsApp : <a href="https://wa.me/22998471366" target="_blank" rel="noopener noreferrer" className="hover:underline text-emerald-600 font-medium">+229 98 47 13 66</a></p>
                     </div>
                   </div>
                 </div>
